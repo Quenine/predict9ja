@@ -1,0 +1,5 @@
+{
+  "extends": "@predict9ja/config/typescript/node.json",
+  "compilerOptions": { "noEmit": true },
+  "include": ["src"]
+}

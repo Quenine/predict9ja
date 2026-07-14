@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: predict9ja_dev
+      POSTGRES_USER: predict9ja_local
+      POSTGRES_PASSWORD: predict9ja_local
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U predict9ja_local -d predict9ja_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - predict9ja_postgres:/var/lib/postgresql/data
+volumes:
+  predict9ja_postgres:

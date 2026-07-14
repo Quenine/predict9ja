@@ -1,0 +1,46 @@
+{
+  "name": "predict9ja",
+  "private": true,
+  "packageManager": "pnpm@10.12.1",
+  "engines": {
+    "node": "\u003e=22 \u003c23"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/db db:generate",
+    "db:migrate": "pnpm --filter @predict9ja/db db:migrate",
+    "db:seed": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/db db:seed",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:reset": "docker compose down -v \u0026\u0026 docker compose up -d --wait postgres \u0026\u0026 pnpm db:deploy \u0026\u0026 pnpm db:seed",
+    "db:deploy": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/db db:deploy",
+    "verify:foundation": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/db verify:foundation",
+    "db:seed-synthetic": "pnpm db:seed",
+    "txline:probe": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:probe",
+    "txline:sync-fixtures": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:sync-fixtures",
+    "txline:probe-scores": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:probe-scores",
+    "txline:import-history": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:import-history",
+    "txline:stream-scores": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:stream-scores",
+    "txline:replay-scores": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:replay-scores"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@predict9ja/config": "workspace:*",
+    "@types/node": "^22.15.32",
+    "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.5",
+    "globals": "^16.2.0",
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.34.1",
+    "vitest": "^3.2.3"
+  }
+}

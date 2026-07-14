@@ -1,0 +1,36 @@
+{
+  "name": "@predict9ja/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint src prisma/seed.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:deploy": "prisma migrate deploy",
+    "verify:foundation": "tsx prisma/verify-foundation.ts"
+  },
+  "dependencies": {
+    "@predict9ja/domain": "workspace:*",
+    "@predict9ja/txline": "workspace:*",
+    "@prisma/client": "^6.10.1"
+  },
+  "devDependencies": {
+    "@predict9ja/config": "workspace:*",
+    "eslint": "^9.29.0",
+    "prisma": "^6.10.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

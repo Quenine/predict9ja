@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SourceMode {
+  LIVE
+  REPLAY
+  SYNTHETIC
+}
+enum FixtureStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  CANCELLED
+  UNKNOWN
+}
+enum MarketStatus {
+  DRAFT
+  OPEN
+  SUSPENDED
+  CLOSED
+  RESOLVED
+  VOID
+}
+enum SettlementStatus {
+  PENDING
+  SETTLED
+  VOID
+}
+enum ProofStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+model DemoUser {
+  id String @id @default(cuid())
+  displayName String
+  credits Int @default(10000)
+  trades Trade[]
+  positions Position[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Fixture {
+  id String @id @default(cuid())
+  sourceId String @unique
+  sourceMode SourceMode
+  homeTeam String
+  awayTeam String
+  startsAt DateTime
+  status FixtureStatus
+  homeScore Int?
+  awayScore Int?
+  participant1Name String
+  participant2Name String
+  participant1IsHome Boolean
+  markets Market[]
+  scoreObservations ScoreObservation[]
+  scoreProjection FixtureScoreProjection?
+  replayState ReplayScoreState?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([startsAt, status])
+}
+
+model Market {
+  id String @id @default(cuid())
+  fixtureId String
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  type String
+  title String
+  status MarketStatus @default(DRAFT)
+  ruleVersion String
+  outcomes MarketOutcome[]
+  trades Trade[]
+  positions Position[]
+  receipt ResolutionReceipt?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([fixtureId, ruleVersion])
+  @@index([status])
+}
+
+model MarketOutcome {
+  id String @id @default(cuid())
+  marketId String
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  key String
+  label String
+  trades Trade[]
+  positions Position[]
+  @@unique([marketId, key])
+}
+
+model Trade {
+  id String @id @default(cuid())
+  userId String
+  user DemoUser @relation(fields: [userId], references: [id])
+  marketId String
+  market Market @relation(fields: [marketId], references: [id])
+  outcomeId String
+  outcome MarketOutcome @relation(fields: [outcomeId], references: [id])
+  credits Int
+  createdAt DateTime @default(now())
+  @@index([userId, createdAt])
+  @@index([marketId])
+}
+
+model Position {
+  id String @id @default(cuid())
+  userId String
+  user DemoUser @relation(fields: [userId], references: [id])
+  marketId String
+  market Market @relation(fields: [marketId], references: [id])
+  outcomeId String
+  outcome MarketOutcome @relation(fields: [outcomeId], references: [id])
+  credits Int
+  updatedAt DateTime @updatedAt
+  @@unique([userId, marketId, outcomeId])
+}
+
+model ResolutionReceipt {
+  id String @id @default(cuid())
+  marketId String @unique
+  market Market @relation(fields: [marketId], references: [id])
+  winningOutcomeKey String?
+  settlementStatus SettlementStatus @default(PENDING)
+  proofStatus ProofStatus @default(PENDING)
+  proofHash String?
+  homeScore Int?
+  awayScore Int?
+  resolvedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([proofHash])
+}
+
+model FeedCheckpoint {
+  id String @id @default(cuid())
+  sourceMode SourceMode
+  streamKey String
+  cursor String
+  metadata Json?
+  lastAcknowledgedEventId String?
+  lastProcessedSequence Int?
+  lastProcessedAt DateTime?
+  connectionOpenedAt DateTime?
+  lastMessageAt DateTime?
+  connectionStatus String?
+  safeErrorCategory String?
+  updatedAt DateTime @updatedAt
+  @@unique([sourceMode, streamKey])
+}
+
+model ScoreObservation {
+  id String @id @default(cuid())
+  fixtureId String
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  providerSequence Int
+  providerTimestamp DateTime
+  sseEventId String?
+  action String
+  phase String
+  period String?
+  participant1Goals Int?
+  participant2Goals Int?
+  finalised Boolean @default(false)
+  sourceMode SourceMode
+  acceptedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  @@unique([fixtureId, providerSequence])
+  @@index([fixtureId, providerTimestamp])
+}
+
+model FixtureScoreProjection {
+  fixtureId String @id
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  latestSequence Int
+  latestProviderTimestamp DateTime
+  latestAction String
+  latestPhase String
+  participant1Goals Int?
+  participant2Goals Int?
+  finalised Boolean @default(false)
+  sourceMode SourceMode
+  updatedAt DateTime @updatedAt
+}
+
+model ReplayScoreState {
+  fixtureId String @id
+  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  latestSequence Int?
+  phase String @default("UNKNOWN")
+  participant1Goals Int?
+  participant2Goals Int?
+  finalised Boolean @default(false)
+  status String @default("IDLE")
+  updatedAt DateTime @updatedAt
+}
+

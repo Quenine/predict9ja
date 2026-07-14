@@ -1,0 +1,34 @@
+{
+  "name": "@predict9ja/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "txline:probe": "tsx src/probe.ts",
+    "txline:sync-fixtures": "tsx src/sync-command.ts",
+    "txline:probe-scores": "tsx src/probe-scores.ts",
+    "txline:import-history": "tsx src/import-history.ts",
+    "txline:stream-scores": "tsx src/stream-scores.ts",
+    "txline:replay-scores": "tsx src/replay-scores.ts"
+  },
+  "dependencies": {
+    "@predict9ja/domain": "workspace:*",
+    "zod": "^3.25.67",
+    "@predict9ja/db": "workspace:*",
+    "@predict9ja/txline": "workspace:*"
+  },
+  "devDependencies": {
+    "@predict9ja/config": "workspace:*",
+    "@types/node": "^22.15.32",
+    "eslint": "^9.29.0",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.3"
+  }
+}
