@@ -44,7 +44,10 @@ export type FixtureSnapshotResult = Readonly<{
   fixtures: readonly NormalizedFixture[];
   fetched: number;
   rejected: number;
+  rejectionReasons: Readonly<Partial<Record<FixtureRejectionReason, number>>>;
 }>;
+export type FixtureRejectionReason =
+  "INVALID_RECORD" | "INVALID_START_TIME" | "MISSING_PARTICIPANT" | "INVALID_FIXTURE_ID";
 export type NormalizedScoreEvent = Readonly<{
   fixtureSourceId: string;
   sequence: number;
@@ -88,6 +91,30 @@ export class TxlineRateLimitError extends TxlineHttpError {
     this.message = "TxLINE rate limit exceeded";
   }
 }
+export type TxlineEndpointCategory = "FIXTURE_SNAPSHOT" | "SCORE_SNAPSHOT" | "HISTORICAL_SCORES";
+export type TxlineHistoricalUnavailableReason = "EMPTY_BODY" | "NO_CONTENT";
+export class TxlineHistoricalUnavailableError extends Error {
+  readonly endpointCategory = "HISTORICAL_SCORES" as const;
+  constructor(
+    public readonly fixtureId: string,
+    public readonly status: number,
+    public readonly reason: TxlineHistoricalUnavailableReason,
+  ) {
+    super("TxLINE historical response is unavailable");
+    this.name = "TxlineHistoricalUnavailableError";
+  }
+}
+export class TxlineMalformedResponseError extends Error {
+  readonly reason = "MALFORMED_JSON" as const;
+  constructor(
+    public readonly status: number,
+    public readonly endpointCategory: TxlineEndpointCategory,
+    public readonly fixtureId?: string,
+  ) {
+    super("TxLINE returned malformed JSON");
+    this.name = "TxlineMalformedResponseError";
+  }
+}
 export class LiveTxlineClientNotConfiguredError extends Error {
   constructor() {
     super("TXLINE_API_TOKEN is required for live synchronization");
@@ -98,17 +125,21 @@ export class LiveTxlineClientNotConfiguredError extends Error {
 const guestResponse = z
   .object({ token: z.string().min(1) })
   .or(z.object({ jwt: z.string().min(1) }));
-const fixtureRecord = z
-  .object({
-    FixtureId: z.union([z.string(), z.number()]),
-    StartTime: z.string().datetime({ offset: true }),
-    Participant1: z.string().min(1),
-    Participant2: z.string().min(1),
-    Participant1IsHome: z.boolean(),
-    GameState: z.union([z.string(), z.number()]).optional(),
-    gameState: z.union([z.string(), z.number()]).optional(),
-  })
-  .refine((value) => value.GameState !== undefined || value.gameState !== undefined);
+const fixtureRecord = z.object({
+  Ts: z.number().int().optional(),
+  FixtureId: z.union([z.string().min(1), z.number().int().safe()]),
+  StartTime: z.union([z.number(), z.string()]),
+  Competition: z.string().optional(),
+  CompetitionId: z.number().int().optional(),
+  FixtureGroupId: z.number().int().optional(),
+  Participant1Id: z.number().int().optional(),
+  Participant1: z.string().trim().min(1),
+  Participant2Id: z.number().int().optional(),
+  Participant2: z.string().trim().min(1),
+  Participant1IsHome: z.boolean(),
+  GameState: z.union([z.string(), z.number()]).optional(),
+  gameState: z.union([z.string(), z.number()]).optional(),
+});
 const snapshotEnvelope = z.union([
   z.array(z.unknown()),
   z.object({ fixtures: z.array(z.unknown()) }),
@@ -117,32 +148,90 @@ const snapshotEnvelope = z.union([
 function recordsFrom(value: z.infer<typeof snapshotEnvelope>): unknown[] {
   return Array.isArray(value) ? value : "fixtures" in value ? value.fixtures : value.Fixtures;
 }
-function statusOf(value: string | number): FixtureStatus {
+function statusOf(value: string | number | undefined): FixtureStatus {
+  if (value === undefined) return "UNKNOWN";
   const state = String(value);
   return state === "1" ? "SCHEDULED" : state === "6" ? "CANCELLED" : "UNKNOWN";
+}
+
+const MIN_FIXTURE_TIME_MS = Date.UTC(2000, 0, 1);
+const MAX_FIXTURE_TIME_MS = Date.UTC(2100, 11, 31, 23, 59, 59, 999);
+const isoDateTime = z.string().datetime({ offset: true });
+
+export function normalizeFixtureStartTime(value: number | string): Date | undefined {
+  let milliseconds: number;
+  if (typeof value === "number") {
+    if (!Number.isSafeInteger(value)) return undefined;
+    if (value >= MIN_FIXTURE_TIME_MS && value <= MAX_FIXTURE_TIME_MS) {
+      milliseconds = value;
+    } else {
+      const minimumSeconds = Math.ceil(MIN_FIXTURE_TIME_MS / 1_000);
+      const maximumSeconds = Math.floor(MAX_FIXTURE_TIME_MS / 1_000);
+      if (value < minimumSeconds || value > maximumSeconds) return undefined;
+      milliseconds = value * 1_000;
+    }
+  } else {
+    if (!isoDateTime.safeParse(value).success) return undefined;
+    milliseconds = Date.parse(value);
+  }
+
+  const date = new Date(milliseconds);
+  return Number.isFinite(date.getTime()) &&
+    date.getTime() >= MIN_FIXTURE_TIME_MS &&
+    date.getTime() <= MAX_FIXTURE_TIME_MS
+    ? date
+    : undefined;
+}
+
+function rejectionReason(record: unknown): FixtureRejectionReason {
+  if (!record || typeof record !== "object" || Array.isArray(record)) return "INVALID_RECORD";
+  const value = record as Record<string, unknown>;
+  if (!(
+    (typeof value.FixtureId === "string" && value.FixtureId.length > 0) ||
+    (typeof value.FixtureId === "number" && Number.isSafeInteger(value.FixtureId))
+  ))
+    return "INVALID_FIXTURE_ID";
+  if (
+    typeof value.Participant1 !== "string" ||
+    value.Participant1.trim().length === 0 ||
+    typeof value.Participant2 !== "string" ||
+    value.Participant2.trim().length === 0
+  )
+    return "MISSING_PARTICIPANT";
+  if (
+    (typeof value.StartTime !== "number" && typeof value.StartTime !== "string") ||
+    normalizeFixtureStartTime(value.StartTime) === undefined
+  )
+    return "INVALID_START_TIME";
+  return "INVALID_RECORD";
 }
 
 export function normalizeSnapshot(payload: unknown): FixtureSnapshotResult {
   const records = recordsFrom(snapshotEnvelope.parse(payload));
   const fixtures: NormalizedFixture[] = [];
   let rejected = 0;
+  const rejectionReasons: Partial<Record<FixtureRejectionReason, number>> = {};
   for (const record of records) {
     const parsed = fixtureRecord.safeParse(record);
     if (!parsed.success) {
       rejected++;
+      const reason = rejectionReason(record);
+      rejectionReasons[reason] = (rejectionReasons[reason] ?? 0) + 1;
       continue;
     }
     const value = parsed.data;
-    const state = value.GameState ?? value.gameState;
-    if (state === undefined) {
+    const startsAt = normalizeFixtureStartTime(value.StartTime);
+    if (!startsAt) {
       rejected++;
+      rejectionReasons.INVALID_START_TIME = (rejectionReasons.INVALID_START_TIME ?? 0) + 1;
       continue;
     }
+    const state = value.GameState ?? value.gameState;
     fixtures.push({
       sourceId: String(value.FixtureId),
       homeTeam: value.Participant1IsHome ? value.Participant1 : value.Participant2,
       awayTeam: value.Participant1IsHome ? value.Participant2 : value.Participant1,
-      startsAt: new Date(value.StartTime),
+      startsAt,
       status: statusOf(state),
       sourceMode: "LIVE",
       participant1Name: value.Participant1,
@@ -150,7 +239,7 @@ export function normalizeSnapshot(payload: unknown): FixtureSnapshotResult {
       participant1IsHome: value.Participant1IsHome,
     });
   }
-  return { fixtures, fetched: records.length, rejected };
+  return { fixtures, fetched: records.length, rejected, rejectionReasons };
 }
 
 class GuestJwtProvider {
@@ -178,6 +267,39 @@ function errorFor(response: Response): TxlineHttpError {
   if (response.status === 403) return new TxlineSubscriptionError();
   if (response.status === 429) return new TxlineRateLimitError(response.headers.get("retry-after"));
   return new TxlineHttpError(response.status);
+}
+export async function readTxlineJson(
+  response: Response,
+  context: Readonly<{ endpointCategory: TxlineEndpointCategory; fixtureId?: string }>,
+): Promise<unknown> {
+  if (!response.ok) throw errorFor(response);
+  if (response.status === 204 && context.endpointCategory === "HISTORICAL_SCORES") {
+    throw new TxlineHistoricalUnavailableError(context.fixtureId ?? "", 204, "NO_CONTENT");
+  }
+  const body = await response.text();
+  if (!body.trim()) {
+    if (context.endpointCategory === "HISTORICAL_SCORES") {
+      throw new TxlineHistoricalUnavailableError(
+        context.fixtureId ?? "",
+        response.status,
+        "EMPTY_BODY",
+      );
+    }
+    throw new TxlineMalformedResponseError(
+      response.status,
+      context.endpointCategory,
+      context.fixtureId,
+    );
+  }
+  try {
+    return JSON.parse(body) as unknown;
+  } catch {
+    throw new TxlineMalformedResponseError(
+      response.status,
+      context.endpointCategory,
+      context.fixtureId,
+    );
+  }
 }
 export function createHttpTxlineClient(
   config: TxlineConfig,
@@ -211,24 +333,30 @@ export function createHttpTxlineClient(
   };
   return {
     snapshots: {
-      getFixtures: async () =>
-        normalizeSnapshot(await (await authenticated("/api/fixtures/snapshot")).json()),
+      getFixtures: async () => {
+        const response = await authenticated("/api/fixtures/snapshot");
+        return normalizeSnapshot(
+          await readTxlineJson(response, { endpointCategory: "FIXTURE_SNAPSHOT" }),
+        );
+      },
     },
     stream: { subscribe: () => Promise.reject(new LiveTxlineClientNotConfiguredError()) },
-    getScoresSnapshot: async (fixtureId, asOf) =>
-      normalizeScoreBatch(
-        await (
-          await authenticated(
-            `/api/scores/snapshot/${encodeURIComponent(fixtureId)}${asOf ? `?asOf=${encodeURIComponent(asOf.toISOString())}` : ""}`,
-          )
-        ).json(),
-      ),
-    getHistoricalScores: async (fixtureId) =>
-      normalizeScoreBatch(
-        await (
-          await authenticated(`/api/scores/historical/${encodeURIComponent(fixtureId)}`)
-        ).json(),
-      ),
+    getScoresSnapshot: async (fixtureId, asOf) => {
+      const response = await authenticated(
+        `/api/scores/snapshot/${encodeURIComponent(fixtureId)}${asOf ? `?asOf=${encodeURIComponent(asOf.toISOString())}` : ""}`,
+      );
+      return normalizeScoreBatch(
+        await readTxlineJson(response, { endpointCategory: "SCORE_SNAPSHOT", fixtureId }),
+      );
+    },
+    getHistoricalScores: async (fixtureId) => {
+      const response = await authenticated(
+        `/api/scores/historical/${encodeURIComponent(fixtureId)}`,
+      );
+      return normalizeScoreBatch(
+        await readTxlineJson(response, { endpointCategory: "HISTORICAL_SCORES", fixtureId }),
+      );
+    },
     openScoresStream: async (streamOptions = {}) => {
       let token = await jwt.get();
       const connect = (value: string) =>
@@ -266,7 +394,8 @@ const fixture: NormalizedFixture = {
 export function createSyntheticTxlineClient(): TxlineClient {
   return {
     snapshots: {
-      getFixtures: () => Promise.resolve({ fixtures: [fixture], fetched: 1, rejected: 0 }),
+      getFixtures: () =>
+        Promise.resolve({ fixtures: [fixture], fetched: 1, rejected: 0, rejectionReasons: {} }),
     },
     stream: { subscribe: () => Promise.resolve(() => Promise.resolve()) },
     getScoresSnapshot: () =>

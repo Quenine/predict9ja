@@ -1,5 +1,7 @@
 # Predict9ja World Cup Arena
 
+Batch 4 adds anonymous judge sessions, ledger-backed demo-credit positions, transparent synthetic quotes, deterministic resolution/settlement, and auditable application receipts. No money can be deposited or withdrawn. TxLINE odds/proofs and Solana validation are not implemented.
+
 A mobile-first football arena prototype with a Next.js web app, worker, pure domain package, PostgreSQL/Prisma storage, and normalized TxLINE fixture and score boundaries. Score snapshots, history, SSE ingestion, projections, and replay are implemented; trading, odds, settlement, proofs, wallets, and payments are not.
 
 ## Local setup
@@ -11,6 +13,7 @@ pnpm install --frozen-lockfile
 pnpm db:up
 pnpm db:deploy
 pnpm db:seed
+pnpm db:test:prepare
 pnpm dev
 ```
 

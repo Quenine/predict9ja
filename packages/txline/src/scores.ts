@@ -31,8 +31,20 @@ const objectOf = (value: unknown): Record<string, unknown> | null =>
     : null;
 const alias = (record: Record<string, unknown>, upper: string, lower: string) =>
   record[upper] ?? record[lower];
-function reason(error: unknown) {
-  return error instanceof Error ? error.message : "malformed_record";
+const SAFE_REJECTION_REASONS = new Set([
+  "malformed_record",
+  "invalid_fixture_id",
+  "invalid_sequence",
+  "invalid_timestamp",
+  "malformed_stats",
+  "negative_score",
+  "malformed_json",
+]);
+export function scoreRejectionReason(error: unknown) {
+  if (error instanceof SyntaxError) return "malformed_json";
+  return error instanceof Error && SAFE_REJECTION_REASONS.has(error.message)
+    ? error.message
+    : "malformed_record";
 }
 function scoreOf(stats: unknown, key: "1" | "2"): number | null {
   if (stats === undefined || stats === null) return null;
@@ -108,7 +120,7 @@ export function normalizeScoreBatch(payload: unknown, sourceMode: SourceMode = "
     try {
       scores.push(normalizeScoreRecord(record, sourceMode));
     } catch (error) {
-      const key = reason(error);
+      const key = scoreRejectionReason(error);
       rejectionReasons[key] = (rejectionReasons[key] ?? 0) + 1;
     }
   }

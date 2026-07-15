@@ -1,6 +1,8 @@
-import { getFixtureDetails } from "@predict9ja/db";
+import { listFixtureMarkets } from "@predict9ja/db";
 import { displayedScore, displayedTeams } from "@predict9ja/domain";
 import { notFound } from "next/navigation";
+import { currentDemoAccount } from "../../session-context";
+import { MarketBoard } from "./market-board";
 export const dynamic = "force-dynamic";
 export default async function FixtureDetails({
   params,
@@ -8,7 +10,10 @@ export default async function FixtureDetails({
   params: Promise<{ fixtureId: string }>;
 }) {
   const { fixtureId } = await params;
-  const fixture = await getFixtureDetails(decodeURIComponent(fixtureId));
+  const [fixture, account] = await Promise.all([
+    listFixtureMarkets(decodeURIComponent(fixtureId)),
+    currentDemoAccount(),
+  ]);
   if (!fixture) notFound();
   const teams = displayedTeams(fixture);
   const projection = fixture.scoreProjection;
@@ -51,6 +56,30 @@ export default async function FixtureDetails({
           <p>Latest provider sequence: {projection?.latestSequence ?? "none"}</p>
         </article>
       </section>
+      <section className="section-heading">
+        <h2>Prediction markets</h2>
+        <p>All displayed probabilities are synthetic demonstration quotes, not TxLINE odds.</p>
+      </section>
+      <MarketBoard
+        balance={account?.availableCredits ?? 0}
+        markets={fixture.markets.map((market) => ({
+          id: market.id,
+          title: market.title,
+          status: market.status,
+          closeAt: market.closeAt.toISOString(),
+          outcomes: market.outcomes.map((outcome) => ({
+            key: outcome.key,
+            label: outcome.label,
+            quote: outcome.quotes[0]
+              ? {
+                  version: outcome.quotes[0].version,
+                  priceBasisPoints: outcome.quotes[0].priceBasisPoints,
+                  source: outcome.quotes[0].source,
+                }
+              : null,
+          })),
+        }))}
+      />
       <section className="card observations">
         <h2>Recent normalized observations</h2>
         {fixture.scoreObservations.length ? (

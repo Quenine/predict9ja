@@ -7,7 +7,7 @@ if (!command) throw new Error("Command is required");
 const child = spawn(
   process.platform === "win32" && command === "pnpm" ? "pnpm.cmd" : command,
   args,
-  { env: process.env, stdio: "inherit", shell: false },
+  { env: process.env, stdio: "inherit", shell: process.platform === "win32" },
 );
 child.on("exit", (code, signal) => {
   if (signal) process.kill(process.pid, signal);

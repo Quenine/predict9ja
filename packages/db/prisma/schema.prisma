@@ -20,9 +20,9 @@ enum FixtureStatus {
 }
 enum MarketStatus {
   DRAFT
-  OPEN
-  SUSPENDED
+  ACTIVE
   CLOSED
+  RESOLUTION_READY
   RESOLVED
   VOID
 }
@@ -32,9 +32,21 @@ enum SettlementStatus {
   VOID
 }
 enum ProofStatus {
-  PENDING
+  NOT_REQUESTED
   VERIFIED
   FAILED
+}
+enum QuoteSource {
+  SYNTHETIC
+  ADMIN_DEMO
+  TXLINE
+}
+enum LedgerEntryType {
+  SESSION_GRANT
+  POSITION_PURCHASE
+  SETTLEMENT_PAYOUT
+  VOID_REFUND
+  ADMIN_RESET
 }
 
 model DemoUser {
@@ -76,11 +88,18 @@ model Market {
   type String
   title String
   status MarketStatus @default(DRAFT)
+  displayOrder Int @default(0)
+  closeAt DateTime
+  settlementStatus SettlementStatus @default(PENDING)
   ruleVersion String
   outcomes MarketOutcome[]
   trades Trade[]
   positions Position[]
   receipt ResolutionReceipt?
+  quotes OutcomeQuote[]
+  demoPurchases DemoPurchase[]
+  demoPositions DemoPosition[]
+  lifecycleAudits MarketLifecycleAudit[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@unique([fixtureId, ruleVersion])
@@ -95,6 +114,9 @@ model MarketOutcome {
   label String
   trades Trade[]
   positions Position[]
+  quotes OutcomeQuote[]
+  demoPurchases DemoPurchase[]
+  demoPositions DemoPosition[]
   @@unique([marketId, key])
 }
 
@@ -131,14 +153,128 @@ model ResolutionReceipt {
   market Market @relation(fields: [marketId], references: [id])
   winningOutcomeKey String?
   settlementStatus SettlementStatus @default(PENDING)
-  proofStatus ProofStatus @default(PENDING)
+  proofStatus ProofStatus @default(NOT_REQUESTED)
   proofHash String?
   homeScore Int?
   awayScore Int?
   resolvedAt DateTime?
+  fixtureId String?
+  ruleVersion String?
+  finalObservationId String?
+  providerSequence Int?
+  providerTimestamp DateTime?
+  sourceMode SourceMode?
+  scoreAction String?
+  participant1Goals Int?
+  participant2Goals Int?
+  participant1IsHome Boolean?
+  resolutionStatus String?
+  integrityDigest String? @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   @@index([proofHash])
+}
+
+model AnonymousSession {
+  id String @id @default(cuid())
+  tokenHash String @unique
+  account DemoAccount?
+  createdAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  revokedAt DateTime?
+}
+
+model DemoAccount {
+  id String @id @default(cuid())
+  sessionId String? @unique
+  session AnonymousSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  label String?
+  availableCredits Int @default(0)
+  ledgerEntries CreditLedgerEntry[]
+  purchases DemoPurchase[]
+  positions DemoPosition[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([availableCredits])
+}
+
+model CreditLedgerEntry {
+  id String @id @default(cuid())
+  accountId String
+  account DemoAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amount Int
+  entryType LedgerEntryType
+  reference String @unique
+  marketId String?
+  positionId String?
+  receiptId String?
+  createdAt DateTime @default(now())
+  @@index([accountId, createdAt])
+}
+
+model OutcomeQuote {
+  id String @id @default(cuid())
+  marketId String
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  outcomeId String
+  outcome MarketOutcome @relation(fields: [outcomeId], references: [id], onDelete: Cascade)
+  version Int
+  priceBasisPoints Int
+  source QuoteSource
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@unique([marketId, outcomeId, version])
+  @@index([marketId, active])
+}
+
+model DemoPurchase {
+  id String @id @default(cuid())
+  accountId String
+  account DemoAccount @relation(fields: [accountId], references: [id])
+  marketId String
+  market Market @relation(fields: [marketId], references: [id])
+  outcomeId String
+  outcome MarketOutcome @relation(fields: [outcomeId], references: [id])
+  idempotencyKey String
+  stakeCredits Int
+  quoteVersion Int
+  priceBasisPoints Int
+  sharesMicros BigInt
+  potentialPayoutCredits Int
+  createdAt DateTime @default(now())
+  @@unique([accountId, idempotencyKey])
+  @@index([marketId, createdAt])
+}
+
+model DemoPosition {
+  id String @id @default(cuid())
+  accountId String
+  account DemoAccount @relation(fields: [accountId], references: [id])
+  marketId String
+  market Market @relation(fields: [marketId], references: [id])
+  outcomeId String
+  outcome MarketOutcome @relation(fields: [outcomeId], references: [id])
+  stakeCredits Int
+  sharesMicros BigInt
+  potentialPayoutCredits Int
+  actualPayoutCredits Int?
+  settledAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([accountId, marketId, outcomeId])
+  @@index([accountId, settledAt])
+}
+
+model MarketLifecycleAudit {
+  id String @id @default(cuid())
+  marketId String
+  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  previousStatus MarketStatus
+  newStatus MarketStatus
+  reasonCode String
+  actorType String
+  createdAt DateTime @default(now())
+  @@index([marketId, createdAt])
 }
 
 model FeedCheckpoint {

@@ -2,6 +2,9 @@ import type { FixtureStatus, SourceMode } from "@predict9ja/domain";
 import { PrismaClient } from "@prisma/client";
 import type { FixtureSnapshotResult, NormalizedFixture } from "@predict9ja/txline";
 export * from "./scores";
+export * from "./accounts";
+export * from "./markets";
+export * from "./resolution";
 
 const globalDatabase = globalThis as unknown as { prisma?: PrismaClient };
 export const db = globalDatabase.prisma ?? new PrismaClient();
@@ -22,20 +25,56 @@ export function listFixturesWithMarkets() {
   });
 }
 export async function getAdminSummary() {
-  const [fixtures, checkpoint, scoreCheckpoint, scoreObservations, replayState] = await Promise.all(
-    [
-      db.fixture.groupBy({ by: ["sourceMode"], _count: true }),
-      db.feedCheckpoint.findUnique({
-        where: { sourceMode_streamKey: { sourceMode: "LIVE", streamKey: "fixture-snapshot" } },
-      }),
-      db.feedCheckpoint.findUnique({
-        where: { sourceMode_streamKey: { sourceMode: "LIVE", streamKey: "scores" } },
-      }),
-      db.scoreObservation.count(),
-      db.replayScoreState.findFirst({ orderBy: { updatedAt: "desc" } }),
-    ],
-  );
-  return { fixtures, checkpoint, scoreCheckpoint, scoreObservations, replayState };
+  const [
+    fixtures,
+    checkpoint,
+    scoreCheckpoint,
+    scoreObservations,
+    replayState,
+    accountCount,
+    activeMarkets,
+    openPositions,
+    unsettledMarkets,
+    accounts,
+    latestFinalised,
+  ] = await Promise.all([
+    db.fixture.groupBy({ by: ["sourceMode"], _count: true }),
+    db.feedCheckpoint.findUnique({
+      where: { sourceMode_streamKey: { sourceMode: "LIVE", streamKey: "fixture-snapshot" } },
+    }),
+    db.feedCheckpoint.findUnique({
+      where: { sourceMode_streamKey: { sourceMode: "LIVE", streamKey: "scores" } },
+    }),
+    db.scoreObservation.count(),
+    db.replayScoreState.findFirst({ orderBy: { updatedAt: "desc" } }),
+    db.demoAccount.count(),
+    db.market.count({ where: { status: "ACTIVE" } }),
+    db.demoPosition.count({ where: { settledAt: null } }),
+    db.market.count({ where: { status: "RESOLVED", settlementStatus: "PENDING" } }),
+    db.demoAccount.findMany({ include: { ledgerEntries: { select: { amount: true } } } }),
+    db.fixtureScoreProjection.findFirst({
+      where: { finalised: true },
+      orderBy: { latestProviderTimestamp: "desc" },
+      include: { fixture: true },
+    }),
+  ]);
+  return {
+    fixtures,
+    checkpoint,
+    scoreCheckpoint,
+    scoreObservations,
+    replayState,
+    accountCount,
+    activeMarkets,
+    openPositions,
+    unsettledMarkets,
+    ledgerReconciled: accounts.every(
+      (account) =>
+        account.availableCredits ===
+        account.ledgerEntries.reduce((sum, entry) => sum + entry.amount, 0),
+    ),
+    latestFinalised,
+  };
 }
 export type FixtureSyncReport = {
   fetched: number;

@@ -35,7 +35,10 @@ async function seed() {
         fixtureId: fixture.id,
         type: template.type,
         title: template.title,
-        status: "OPEN",
+        status: "ACTIVE",
+        closeAt: new Date("2026-06-15T18:00:00Z"),
+        displayOrder:
+          template.type === "MATCH_RESULT" ? 0 : template.type === "TOTAL_GOALS_2_5" ? 1 : 2,
         ruleVersion: template.ruleVersion,
         outcomes: {
           create: template.outcomes.map((outcome) => ({ key: outcome.key, label: outcome.label })),
@@ -43,6 +46,49 @@ async function seed() {
       },
     });
   }
+  const prices: Record<string, number[]> = {
+    "match-result@1": [4500, 2800, 2700],
+    "total-goals-2.5@1": [5200, 4800],
+    "both-teams-to-score@1": [5400, 4600],
+  };
+  const markets = await prisma.market.findMany({
+    where: { fixtureId: fixture.id },
+    include: { outcomes: { orderBy: { id: "asc" } } },
+  });
+  for (const market of markets)
+    for (const [index, outcome] of market.outcomes.entries())
+      await prisma.outcomeQuote.upsert({
+        where: {
+          marketId_outcomeId_version: { marketId: market.id, outcomeId: outcome.id, version: 1 },
+        },
+        update: {},
+        create: {
+          marketId: market.id,
+          outcomeId: outcome.id,
+          version: 1,
+          priceBasisPoints: prices[market.ruleVersion]?.[index] ?? 5000,
+          source: "SYNTHETIC",
+        },
+      });
+  const cliAccount = await prisma.demoAccount.upsert({
+    where: { id: "cli-demo-account" },
+    update: {},
+    create: {
+      id: "cli-demo-account",
+      label: "Synthetic CLI demonstration",
+      availableCredits: 10000,
+    },
+  });
+  await prisma.creditLedgerEntry.upsert({
+    where: { reference: "session-grant:cli-demo-account" },
+    update: {},
+    create: {
+      accountId: cliAccount.id,
+      amount: 10000,
+      entryType: "SESSION_GRANT",
+      reference: "session-grant:cli-demo-account",
+    },
+  });
   const observations = [
     [1, "2026-06-15T17:55:00Z", "phase_update", "NOT_STARTED", null, null, false],
     [2, "2026-06-15T18:15:00Z", "score_update", "FIRST_HALF", 1, 0, false],

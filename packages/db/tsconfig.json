@@ -1,5 +1,5 @@
 {
   "extends": "@predict9ja/config/typescript/node.json",
   "compilerOptions": { "noEmit": true },
-  "include": ["src", "prisma/seed.ts", "prisma/verify-foundation.ts"]
+  "include": ["src", "prisma/**/*.ts", "vitest.integration.config.ts"]
 }

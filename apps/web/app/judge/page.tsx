@@ -1,26 +1,34 @@
+import Link from "next/link";
+import { StartSession } from "./start-session";
 export default function Judge() {
   return (
     <main className="shell">
       <div className="eyebrow">Judge walkthrough</div>
-      <h1>Fixture data foundation</h1>
+      <h1>Demo-credit judge walkthrough</h1>
+      <StartSession />
       <section className="grid">
         <article className="card">
-          <h2>1. Local data</h2>
-          <p>PostgreSQL stores seeded synthetic fixtures and normalized TxLINE snapshots.</p>
+          <h2>1–3. Session and position</h2>
+          <p>
+            Run <code>pnpm demo:reset</code>, create an isolated 10,000-credit session, open the
+            fictional fixture, select a quoted outcome, and confirm a demo position.
+          </p>
+          <Link href="/arena/synthetic-kora-savanna-001">Open synthetic fixture</Link>
         </article>
         <article className="card">
-          <h2>2. Safe synchronization</h2>
+          <h2>4–6. Replay and resolve</h2>
           <p>
-            The worker can authenticate and synchronize fixture snapshots when a valid TxLINE API
-            token is configured.
+            Run <code>pnpm demo:run</code> to replay six stored observations and resolve only after
+            explicit <code>game_finalised</code>.
           </p>
         </article>
         <article className="card">
-          <h2>3. Score evidence</h2>
+          <h2>7–8. Inspect</h2>
           <p>
-            Normalized score observations and replay are implemented. Trading, odds, market
-            resolution, settlement and proof validation are not implemented.
+            Inspect the ledger-backed payout in Portfolio and open its application receipt. Live
+            TxLINE requires credentials. TxLINE proofs and Solana validation are not implemented.
           </p>
+          <Link href="/portfolio">Open portfolio</Link>
         </article>
       </section>
     </main>

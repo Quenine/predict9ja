@@ -14,6 +14,15 @@ export default async function Admin() {
             <p>PostgreSQL responded successfully.</p>
           </article>
           <article className="card">
+            <h2>Demo workflow</h2>
+            <p>Accounts: {summary.accountCount}</p>
+            <p>Active markets: {summary.activeMarkets}</p>
+            <p>Open positions: {summary.openPositions}</p>
+            <p>Unsettled resolved markets: {summary.unsettledMarkets}</p>
+            <p>Ledger reconciliation: {summary.ledgerReconciled ? "healthy" : "mismatch"}</p>
+            <p>Latest finalised fixture: {summary.latestFinalised?.fixture.sourceId ?? "none"}</p>
+          </article>
+          <article className="card">
             <h2>Score pipeline</h2>
             <p>{summary.scoreObservations} normalized observations</p>
             <p>Checkpoint: {summary.scoreCheckpoint?.lastProcessedSequence ?? "none"}</p>
@@ -32,6 +41,15 @@ export default async function Admin() {
             <h2>Latest fixture sync</h2>
             <p>{summary.checkpoint?.updatedAt.toISOString() ?? "No TxLINE sync recorded."}</p>
           </article>
+        </section>
+        <section className="card">
+          <h2>Safe demo CLI</h2>
+          <p>
+            <code>pnpm markets:generate-all</code> ·{" "}
+            <code>pnpm markets:resolve --fixture-id ID --dry-run</code> ·{" "}
+            <code>pnpm markets:settle --fixture-id ID</code> · <code>pnpm demo:reset</code> ·{" "}
+            <code>pnpm demo:run</code>
+          </p>
         </section>
         <section className="card">
           <h2>Safe CLI synchronization</h2>

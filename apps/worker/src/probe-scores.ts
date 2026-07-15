@@ -12,6 +12,7 @@ console.log(
     fetched: result.fetched,
     accepted: result.scores.length,
     rejected: result.rejected,
+    rejectionReasons: result.rejectionReasons,
     minimumSequence: ordered[0]?.sequence ?? null,
     maximumSequence: latest?.sequence ?? null,
     latestPhase: latest?.phase ?? null,

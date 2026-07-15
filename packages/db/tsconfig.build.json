@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "noEmit": false, "declaration": true, "outDir": "dist" },
-  "exclude": ["prisma/seed.ts"]
+  "exclude": ["prisma", "src/**/*.test.ts", "vitest.integration.config.ts"]
 }

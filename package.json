@@ -10,7 +10,10 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "turbo test",
+    "test": "pnpm test:unit && pnpm test:integration",
+    "test:unit": "turbo test:unit",
+    "test:integration": "node scripts/run-integration-tests.mjs",
+    "db:test:prepare": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/db db:test:prepare",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/db db:generate",
@@ -28,7 +31,13 @@
     "txline:probe-scores": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:probe-scores",
     "txline:import-history": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:import-history",
     "txline:stream-scores": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:stream-scores",
-    "txline:replay-scores": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:replay-scores"
+    "txline:replay-scores": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker txline:replay-scores",
+    "markets:generate": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker markets:generate",
+    "markets:generate-all": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker markets:generate",
+    "markets:resolve": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker markets:resolve",
+    "markets:settle": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker markets:settle",
+    "demo:reset": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker demo:reset",
+    "demo:run": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/worker demo:run"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

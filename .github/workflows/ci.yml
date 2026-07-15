@@ -6,6 +6,21 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: predict9ja_dev
+          POSTGRES_USER: predict9ja_local
+          POSTGRES_PASSWORD: predict9ja_local
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U predict9ja_local -d predict9ja_dev"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      DATABASE_URL: postgresql://predict9ja_local:predict9ja_local@localhost:5432/predict9ja_dev?schema=public
+      DATABASE_TEST_URL: postgresql://predict9ja_local:predict9ja_local@localhost:5432/predict9ja_test?schema=public
+      DEMO_SESSION_SECRET: ci-only-demo-session-secret
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -17,8 +32,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm db:generate
-        env:
-          DATABASE_URL: postgresql://unused:unused@localhost:5432/unused
+      - run: pnpm db:deploy
+      - run: pnpm db:seed
+      - run: pnpm db:test:prepare
+      - run: pnpm verify:foundation
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

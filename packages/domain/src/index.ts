@@ -1,5 +1,6 @@
 export type FixtureStatus = "SCHEDULED" | "LIVE" | "FINISHED" | "CANCELLED" | "UNKNOWN";
 export type MarketStatus = "DRAFT" | "OPEN" | "SUSPENDED" | "CLOSED" | "RESOLVED" | "VOID";
+export * from "./markets";
 export type MarketType = "MATCH_RESULT" | "TOTAL_GOALS_2_5" | "BOTH_TEAMS_TO_SCORE";
 export type SourceMode = "LIVE" | "REPLAY" | "SYNTHETIC";
 export const SOCCER_PHASES = {
@@ -110,8 +111,8 @@ export function createMarketTemplates(
       title: "Total goals: 2.5",
       ruleVersion: RULE_VERSIONS.TOTAL_GOALS_2_5,
       outcomes: [
-        { key: "OVER_2_5", label: "Over 2.5" },
-        { key: "UNDER_2_5", label: "Under 2.5" },
+        { key: "OVER", label: "Over 2.5" },
+        { key: "UNDER", label: "Under 2.5" },
       ],
     },
     {
@@ -128,7 +129,7 @@ export function createMarketTemplates(
 
 const outcomeKeys: Readonly<Record<MarketType, readonly string[]>> = {
   MATCH_RESULT: ["HOME", "DRAW", "AWAY"],
-  TOTAL_GOALS_2_5: ["OVER_2_5", "UNDER_2_5"],
+  TOTAL_GOALS_2_5: ["OVER", "UNDER"],
   BOTH_TEAMS_TO_SCORE: ["YES", "NO"],
 };
 

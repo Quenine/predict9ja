@@ -19,4 +19,8 @@ pnpm txline:stream-scores
 pnpm txline:stream-scores --duration 60
 ```
 
+`txline:import-history` exits with code 2 when history is unavailable (too recent, too old,
+empty, or HTTP 204) and code 3 for malformed provider JSON. Both cases print only a safe JSON
+summary; authentication and other HTTP failures retain their typed error behavior.
+
 Current limitations: provider coverage depends on the configured subscription; an open stream can legitimately receive zero score messages. Odds, trading, balances, market resolution, settlement, proofs, Solana, and production authentication are out of scope.

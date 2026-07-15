@@ -9,13 +9,19 @@
     "start": "node dist/index.js",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
+    "test:unit": "vitest run",
     "txline:probe": "tsx src/probe.ts",
     "txline:sync-fixtures": "tsx src/sync-command.ts",
     "txline:probe-scores": "tsx src/probe-scores.ts",
     "txline:import-history": "tsx src/import-history.ts",
     "txline:stream-scores": "tsx src/stream-scores.ts",
-    "txline:replay-scores": "tsx src/replay-scores.ts"
+    "txline:replay-scores": "tsx src/replay-scores.ts",
+    "markets:generate": "tsx src/markets-generate.ts",
+    "markets:resolve": "tsx src/markets-resolve.ts",
+    "markets:settle": "tsx src/markets-settle.ts",
+    "demo:reset": "tsx src/demo-reset.ts",
+    "demo:run": "tsx src/demo-run.ts"
   },
   "dependencies": {
     "@predict9ja/domain": "workspace:*",

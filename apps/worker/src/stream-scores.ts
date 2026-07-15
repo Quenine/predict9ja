@@ -3,6 +3,7 @@ import {
   configFromEnvironment,
   createHttpTxlineClient,
   normalizeScoreRecord,
+  scoreRejectionReason,
   TxlineSubscriptionError,
 } from "@predict9ja/txline";
 import { option } from "./arguments";
@@ -17,6 +18,7 @@ const report = {
   heartbeats: 0,
   messagesAccepted: 0,
   rejected: 0,
+  rejectionReasons: {} as Record<string, number>,
   duplicated: 0,
   applied: 0,
 };
@@ -66,8 +68,10 @@ while (!controller.signal.aborted) {
         report.messagesAccepted++;
         if (state === "duplicate") report.duplicated++;
         else if (state === "applied") report.applied++;
-      } catch {
+      } catch (error) {
         report.rejected++;
+        const reason = scoreRejectionReason(error);
+        report.rejectionReasons[reason] = (report.rejectionReasons[reason] ?? 0) + 1;
       }
     }
     delay = 1000;

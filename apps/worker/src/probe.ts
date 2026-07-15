@@ -9,6 +9,7 @@ console.log(
     fixtureCount: result.fetched,
     accepted: result.fixtures.length,
     rejected: result.rejected,
+    rejectionReasons: result.rejectionReasons,
     earliestKickoff: times.length ? new Date(Math.min(...times)).toISOString() : null,
     latestKickoff: times.length ? new Date(Math.max(...times)).toISOString() : null,
   }),

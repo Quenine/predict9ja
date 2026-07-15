@@ -58,6 +58,9 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.2.7(react@19.2.7)
+      zod:
+        specifier: ^3.25.67
+        version: 3.25.76
     devDependencies:
       "@predict9ja/config":
         specifier: workspace:*

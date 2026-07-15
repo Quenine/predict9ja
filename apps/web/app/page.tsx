@@ -4,7 +4,9 @@ export default function Home() {
     <main className="shell">
       <div className="eyebrow">World Cup Arena</div>
       <h1>Live predictions. Verifiable results.</h1>
-      <p className="lead">Follow football markets from kickoff to proof-backed settlement.</p>
+      <p className="lead">
+        Follow football markets from kickoff to an auditable application receipt.
+      </p>
       <div className="actions">
         <Link className="button primary" href="/arena">
           Enter the arena
@@ -24,7 +26,7 @@ export default function Home() {
         </article>
         <article className="card">
           <h2>Verify</h2>
-          <p>Trace each completed market toward a deterministic settlement receipt.</p>
+          <p>Trace deterministic demo settlement without claiming a TxLINE cryptographic proof.</p>
         </article>
       </section>
     </main>
