@@ -17,3 +17,6 @@ _keys/
 *.wallet.json
 *.keypair.json
 validation-wallet*.json
+
+.vercel
+.env*
