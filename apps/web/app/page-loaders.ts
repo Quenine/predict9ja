@@ -2,6 +2,7 @@ import {
   db,
   getAccountPortfolio,
   getAdminSummary,
+  getJudgeDemoState,
   getReceipt,
   listFixtureMarkets,
   listFixturesWithMarkets,
@@ -64,7 +65,8 @@ export const loadJudgePage = () =>
   databaseLoad(async () => {
     const fixtureSourceId = "18241006";
     const include = { scoreObservation: true, receipt: true } as const;
-    const [fixture, verifiedFinal, fallback] = await Promise.all([
+    const account = await currentDemoAccount();
+    const [fixture, verifiedFinal, fallback, demo] = await Promise.all([
       db.fixture.findUnique({ where: { sourceId: fixtureSourceId } }),
       db.scoreProofVerification.findFirst({
         where: {
@@ -81,6 +83,7 @@ export const loadJudgePage = () =>
         include,
         orderBy: { updatedAt: "desc" },
       }),
+      account ? getJudgeDemoState(account.id) : null,
     ]);
-    return { fixture, verifiedFinal, fallback };
+    return { fixture, verifiedFinal, fallback, demo };
   });

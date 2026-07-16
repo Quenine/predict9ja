@@ -62,7 +62,12 @@ try {
     if (response.status !== 200) throw new Error(`${route} returned ${response.status}`);
     if (route === "/arena" && body.includes("Arena unavailable"))
       throw new Error("Arena rendered unavailable state");
-    if (route === "/judge" && (!body.includes("18241006") || !body.includes("962")))
+    if (
+      route === "/judge" &&
+      (!body.includes("From live sports data to auditable prediction settlement") ||
+        !body.includes("Real TxLINE + Solana evidence") ||
+        !body.includes("962"))
+    )
       throw new Error("Judge evidence missing");
     results[route] = response.status;
   }

@@ -191,6 +191,207 @@ p {
 .observations {
   margin-top: 16px;
 }
+.section-label {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.section-label.real {
+  color: #9ee9b5;
+  background: #163321;
+}
+.section-label.synthetic {
+  color: #f5d58a;
+  background: #3a2d12;
+}
+.section-label.receipt {
+  color: #b8d9ff;
+  background: #142d45;
+}
+.evidence-card,
+.demo-panel {
+  border: 1px solid #315b3f;
+  border-radius: 24px;
+  padding: clamp(20px, 4vw, 36px);
+  background: linear-gradient(145deg, #102219, #0c1712 65%);
+}
+.evidence-card h2,
+.demo-panel h2 {
+  margin-top: 18px;
+}
+.evidence-score {
+  margin: 4px 0;
+  color: var(--ink);
+  font-size: clamp(42px, 8vw, 72px);
+  font-weight: 900;
+  letter-spacing: -0.06em;
+  line-height: 1;
+}
+.evidence-pipeline {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin: 24px 0;
+}
+.evidence-pipeline div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #c8f7d5;
+  font-size: 12px;
+  font-weight: 700;
+}
+.evidence-pipeline span {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.evidence-pipeline b {
+  color: var(--accent);
+}
+.evidence-card dl,
+.result-card dl,
+.quote-card dl {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.45fr) 1fr;
+  gap: 10px 20px;
+}
+.evidence-card dt,
+.result-card dt,
+.quote-card dt {
+  color: var(--muted);
+}
+.evidence-card dd,
+.result-card dd,
+.quote-card dd {
+  margin: 0;
+}
+.integrity-note {
+  padding: 12px;
+  border-left: 3px solid var(--accent);
+  background: #14261d;
+}
+.demo-panel {
+  margin-top: 28px;
+  border-color: #59491f;
+  background: linear-gradient(145deg, #201b0f, #0c1712 65%);
+}
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 0;
+  margin: 28px 0;
+  list-style: none;
+}
+.stepper li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #748078;
+  font-size: 12px;
+  font-weight: 700;
+}
+.stepper li span,
+.step-number {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+.stepper li.active {
+  color: var(--ink);
+}
+.stepper li.active span,
+.step-number {
+  color: #06200f;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.demo-step,
+.result-card {
+  margin-top: 14px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(7, 17, 12, 0.75);
+}
+.demo-step h3,
+.result-card h3 {
+  display: inline-block;
+  margin: 0 0 0 8px;
+}
+.balance {
+  display: block;
+  margin-top: 16px;
+  color: var(--accent);
+  font-size: 20px;
+}
+.judge-markets {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+.judge-market {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.judge-market h4 {
+  margin-top: 0;
+}
+.quote-card {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #14261d;
+}
+.stake-presets {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+.stake-presets button {
+  padding: 8px 12px;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+.stake-presets button.selected {
+  color: #06200f;
+  background: var(--accent);
+}
+.result-card {
+  border-color: #315b3f;
+  background: #0f2118;
+}
+.result-card .section-label {
+  margin-bottom: 18px;
+}
+.ledger-row {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.inline-button {
+  display: inline-block;
+  margin-top: 12px;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
 @media (max-width: 700px) {
   .nav {
     align-items: flex-start;
@@ -208,5 +409,22 @@ p {
   .actions {
     flex-direction: column;
     text-align: center;
+  }
+  .evidence-pipeline,
+  .stepper {
+    grid-template-columns: 1fr 1fr;
+  }
+  .evidence-pipeline b {
+    display: none;
+  }
+  .evidence-card dl,
+  .result-card dl,
+  .quote-card dl {
+    grid-template-columns: 1fr;
+  }
+  .evidence-card dd,
+  .result-card dd,
+  .quote-card dd {
+    margin-bottom: 8px;
   }
 }

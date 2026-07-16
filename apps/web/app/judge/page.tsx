@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { loadJudgePage } from "../page-loaders";
 import { judgeEvidenceState, selectJudgeProof } from "./evidence";
-import { StartSession } from "./start-session";
+import { JudgeDemo, type JudgeDemoView } from "./judge-demo";
 
 export const dynamic = "force-dynamic";
 export default async function Judge() {
@@ -15,7 +14,7 @@ export default async function Judge() {
         </section>
       </main>
     );
-  const { fixture, verifiedFinal, fallback } = result.data;
+  const { fixture, verifiedFinal, fallback, demo } = result.data;
   const proof = selectJudgeProof(verifiedFinal, fallback);
   const evidence = judgeEvidenceState(proof);
   const statKeys = Array.isArray(proof?.statKeys) ? proof.statKeys.join(", ") : "not available";
@@ -27,76 +26,131 @@ export default async function Judge() {
         proof.scoreObservation.participant2Goals ?? "–"
       }`
     : "not available";
+  const demoPosition = demo?.account.positions[0] ?? null;
+  const demoPurchase = demo?.account.purchases.find(
+    (purchase) =>
+      purchase.marketId === demoPosition?.marketId && purchase.outcomeId === demoPosition.outcomeId,
+  );
+  const demoProjection = demo?.fixture.scoreProjection;
+  const demoView: JudgeDemoView | null = demo
+    ? {
+        balance: demo.account.availableCredits,
+        fixture: {
+          homeTeam: demo.fixture.homeTeam,
+          awayTeam: demo.fixture.awayTeam,
+          finalised: demoProjection?.finalised ?? false,
+          action: demoProjection?.latestAction ?? null,
+          homeScore: demoProjection
+            ? demo.fixture.participant1IsHome
+              ? demoProjection.participant1Goals
+              : demoProjection.participant2Goals
+            : null,
+          awayScore: demoProjection
+            ? demo.fixture.participant1IsHome
+              ? demoProjection.participant2Goals
+              : demoProjection.participant1Goals
+            : null,
+        },
+        markets: demo.fixture.markets.map((market) => ({
+          id: market.id,
+          title: market.title,
+          ruleVersion: market.ruleVersion,
+          outcomes: market.outcomes.flatMap((outcome) => {
+            const quote = outcome.quotes[0];
+            return quote
+              ? [
+                  {
+                    key: outcome.key,
+                    label: outcome.label,
+                    quoteVersion: quote.version,
+                    priceBasisPoints: quote.priceBasisPoints,
+                  },
+                ]
+              : [];
+          }),
+        })),
+        position: demoPosition
+          ? {
+              market: demoPosition.market.title,
+              outcome: demoPosition.outcome.label,
+              stake: demoPosition.stakeCredits,
+              quoteVersion: demoPurchase?.quoteVersion ?? 0,
+              priceBasisPoints: demoPurchase?.priceBasisPoints ?? 0,
+              potentialPayout: demoPosition.potentialPayoutCredits,
+              actualPayout: demoPosition.actualPayoutCredits,
+              winningOutcome: demoPosition.market.receipt?.winningOutcomeKey ?? null,
+              settlementStatus: demoPosition.market.receipt?.settlementStatus ?? null,
+              receiptId: demoPosition.market.receipt?.id ?? null,
+              ruleVersion: demoPosition.market.ruleVersion,
+              integrityDigest: demoPosition.market.receipt?.integrityDigest ?? null,
+            }
+          : null,
+        ledger: demo.account.ledgerEntries.map((entry) => ({
+          id: entry.id,
+          type: entry.entryType,
+          amount: entry.amount,
+        })),
+      }
+    : null;
 
   return (
     <main className="shell">
-      <div className="eyebrow">Judge walkthrough</div>
-      <h1>Predict9ja evidence and demo flow</h1>
+      <div className="eyebrow">Predict9ja judge demo</div>
+      <h1>From live sports data to auditable prediction settlement.</h1>
+      <p className="lead">
+        Predict9ja normalizes TxLINE sports data, preserves exact match observations, validates
+        selected score predicates against TxLINE’s Solana devnet program, applies deterministic
+        market rules, and produces auditable application receipts.
+      </p>
 
-      <section className="card observations">
-        <h2>Real TxLINE data and Solana proof verification</h2>
+      <section className="evidence-card observations">
+        <div className="section-label real">Real TxLINE + Solana evidence</div>
+        <h2>{fixture ? `${fixture.homeTeam} vs ${fixture.awayTeam}` : "England vs Argentina"}</h2>
+        <p className="evidence-score">{score}</p>
         <p>
           <strong>{evidence.wording}</strong>
         </p>
+        <div className="evidence-pipeline" aria-label="Evidence verification pipeline">
+          {[
+            "TxLINE fixture",
+            "normalized observation",
+            "proof predicates",
+            "Solana validation",
+            "verified evidence",
+          ].map((label, index) => (
+            <div key={label}>
+              <span>{label}</span>
+              {index < 4 && <b aria-hidden="true">→</b>}
+            </div>
+          ))}
+        </div>
         <dl>
-          <dt>Real TxLINE fixture</dt>
-          <dd>{fixture?.sourceId ?? "not available"}</dd>
-          <dt>Final score</dt>
-          <dd>{score}</dd>
-          <dt>Final provider sequence</dt>
+          <dt>Provider sequence</dt>
           <dd>{proof?.providerSequence ?? "not available"}</dd>
-          <dt>Source action</dt>
+          <dt>Observation</dt>
           <dd>{proof?.scoreObservation?.action ?? "not available"}</dd>
-          <dt>TxLINE proof payload digest</dt>
-          <dd className="digest">{proof?.proofPayloadDigest ?? "not available"}</dd>
-          <dt>Ordered stat keys</dt>
+          <dt>Stat keys</dt>
           <dd>{statKeys}</dd>
-          <dt>Verified stat values</dt>
+          <dt>Verified values</dt>
           <dd>{statValues}</dd>
+          <dt>Proof digest</dt>
+          <dd className="digest">{proof?.proofPayloadDigest ?? "not available"}</dd>
           <dt>Solana network</dt>
           <dd>{proof?.network ?? "not available"}</dd>
           <dt>TxLINE program ID</dt>
           <dd className="digest">{proof?.programId ?? "not available"}</dd>
           <dt>Daily scores PDA</dt>
           <dd className="digest">{proof?.dailyScoresPda ?? "not available"}</dd>
-          <dt>Read-only validation</dt>
+          <dt>Read-only validation status</dt>
           <dd>{proof?.validationStatus ?? "not requested"}</dd>
-          <dt>Evidence classification</dt>
-          <dd>{evidence.wording}</dd>
-          <dt>Verified timestamp</dt>
-          <dd>{proof?.verifiedAt?.toISOString() ?? "not available"}</dd>
         </dl>
         {evidence.state === "FINAL_MATCH" && (
-          <p>No matching real-market settlement receipt is linked to this proof.</p>
+          <p className="integrity-note">
+            No real-market settlement receipt is linked to this proof.
+          </p>
         )}
       </section>
-
-      <section className="observations">
-        <h2>Synthetic demo-credit prediction and settlement</h2>
-        <p>
-          This isolated demonstration uses fictional credits and does not imply that the real TxLINE
-          proof triggered a payout.
-        </p>
-        <StartSession />
-        <div className="grid">
-          <article className="card">
-            <h3>1. Open a demo position</h3>
-            <p>Use the fictional fixture and isolated demo credits.</p>
-            <Link href="/arena/synthetic-kora-savanna-001">Open synthetic fixture</Link>
-          </article>
-          <article className="card">
-            <h3>2. Replay and resolve</h3>
-            <p>
-              <code>pnpm demo:run</code> resolves only after synthetic <code>game_finalised</code>.
-            </p>
-          </article>
-          <article className="card">
-            <h3>3. Inspect the receipt</h3>
-            <p>Review the demo-credit ledger and separate application receipt.</p>
-            <Link href="/portfolio">Open portfolio</Link>
-          </article>
-        </div>
-      </section>
+      <JudgeDemo demo={demoView} />
     </main>
   );
 }

@@ -5,10 +5,12 @@ import {
   generateMarketsForFixture,
   hashSessionToken,
   importScoreHistory,
+  initializeJudgeDemo,
   persistScore,
   purchasePosition,
   reconcileAccount,
   resolveFixture,
+  runJudgeDemoSimulation,
   settleFixture,
   ScoreIntegrityError,
 } from "./index";
@@ -231,5 +233,145 @@ describe("resolution and settlement", () => {
     expect((await settleFixture("integration-fixture", client)).refunds).toBe(75);
     expect((await settleFixture("integration-fixture", client)).refunds).toBe(0);
     expect((await reconcileAccount(account.id, client)).reconciled).toBe(true);
+  });
+});
+
+async function judgeTemplate() {
+  const created = await fixture("synthetic-kora-savanna-001");
+  await client.scoreObservation.createMany({
+    data: [
+      [1, "phase_update", "NOT_STARTED", null, null, false],
+      [2, "score_update", "FIRST_HALF", 1, 0, false],
+      [3, "phase_update", "HALFTIME", 1, 0, false],
+      [4, "score_update", "SECOND_HALF", 1, 1, false],
+      [5, "phase_update", "FINISHED", 1, 1, false],
+      [6, "game_finalised", "FINISHED", 1, 1, true],
+    ].map(([providerSequence, action, phase, participant1Goals, participant2Goals, finalised]) => ({
+      fixtureId: created.id,
+      providerSequence: providerSequence as number,
+      providerTimestamp: new Date(`2026-06-15T19:0${providerSequence as number}:00Z`),
+      action: action as string,
+      phase: phase as string,
+      participant1Goals: participant1Goals as number | null,
+      participant2Goals: participant2Goals as number | null,
+      finalised: finalised as boolean,
+      sourceMode: "SYNTHETIC" as const,
+    })),
+  });
+}
+
+describe("browser judge demo", () => {
+  it("initializes an isolated demo idempotently with exactly 10,000 reconciled credits", async () => {
+    await judgeTemplate();
+    const account = (await createDemoSession("integration-secret-value", client)).account;
+    await initializeJudgeDemo(account.id, client);
+    await initializeJudgeDemo(account.id, client);
+    expect(await reconcileAccount(account.id, client)).toMatchObject({
+      availableCredits: 10_000,
+      ledgerBalance: 10_000,
+      reconciled: true,
+    });
+    expect(await client.creditLedgerEntry.count({ where: { accountId: account.id } })).toBe(1);
+    expect(await client.fixture.count({ where: { sourceId: `judge-demo-${account.id}` } })).toBe(1);
+  });
+
+  it("purchases the selected stake at the active quote and rejects insufficient credits", async () => {
+    await judgeTemplate();
+    const account = (await createDemoSession("integration-secret-value", client)).account;
+    const state = await initializeJudgeDemo(account.id, client);
+    const market = state!.fixture.markets.find((value) => value.ruleVersion === "match-result@1")!;
+    const outcome = market.outcomes.find((value) => value.key === "DRAW")!;
+    const quote = outcome.quotes[0]!;
+    const purchase = await purchasePosition(
+      account.id,
+      {
+        marketId: market.id,
+        outcomeKey: outcome.key,
+        stakeCredits: 2_000,
+        quoteVersion: quote.version,
+        idempotencyKey: "judge-active-quote",
+      },
+      client,
+    );
+    expect(purchase).toMatchObject({ stakeCredits: 2_000, quoteVersion: quote.version });
+    await purchasePosition(
+      account.id,
+      {
+        marketId: market.id,
+        outcomeKey: outcome.key,
+        stakeCredits: 5_000,
+        quoteVersion: quote.version,
+        idempotencyKey: "judge-second-buy",
+      },
+      client,
+    );
+    await expect(
+      purchasePosition(
+        account.id,
+        {
+          marketId: market.id,
+          outcomeKey: outcome.key,
+          stakeCredits: 5_000,
+          quoteVersion: quote.version,
+          idempotencyKey: "judge-over-balance",
+        },
+        client,
+      ),
+    ).rejects.toMatchObject({ code: "INSUFFICIENT_CREDITS" });
+  });
+
+  it("finalises only the isolated synthetic fixture and settles 1-1 idempotently", async () => {
+    await judgeTemplate();
+    const real = await fixture("18241006");
+    const proof = await client.scoreProofVerification.create({
+      data: {
+        fixtureId: real.id,
+        fixtureSourceId: real.sourceId,
+        providerSequence: 962,
+        network: "devnet",
+        statKeys: [1, 2],
+        statKeyIdentity: "1,2",
+        validationStatus: "VERIFIED",
+        observationClassification: "FINAL_MATCH_OBSERVATION",
+        settlementEvidenceClassification: "FINAL_DATA_VERIFIED_NO_RECEIPT",
+      },
+    });
+    const account = (await createDemoSession("integration-secret-value", client)).account;
+    const state = await initializeJudgeDemo(account.id, client);
+    const market = state!.fixture.markets.find((value) => value.ruleVersion === "match-result@1")!;
+    const draw = market.outcomes.find((value) => value.key === "DRAW")!;
+    await purchasePosition(
+      account.id,
+      {
+        marketId: market.id,
+        outcomeKey: "DRAW",
+        stakeCredits: 1_000,
+        quoteVersion: draw.quotes[0]!.version,
+        idempotencyKey: "judge-winning-draw",
+      },
+      client,
+    );
+    const first = await runJudgeDemoSimulation(account.id, client);
+    const balanceAfterFirst = first.state!.account.availableCredits;
+    const second = await runJudgeDemoSimulation(account.id, client);
+    expect(second.state!.account.availableCredits).toBe(balanceAfterFirst);
+    expect(second.reconciliation.reconciled).toBe(true);
+    expect(second.state!.fixture.scoreProjection).toMatchObject({
+      latestAction: "game_finalised",
+      participant1Goals: 1,
+      participant2Goals: 1,
+      finalised: true,
+    });
+    expect(second.state!.fixture.markets.map((value) => value.receipt?.winningOutcomeKey)).toEqual([
+      "DRAW",
+      "UNDER",
+      "YES",
+    ]);
+    expect(
+      await client.fixtureScoreProjection.findUnique({ where: { fixtureId: real.id } }),
+    ).toBeNull();
+    expect(await client.resolutionReceipt.count({ where: { proofVerificationId: proof.id } })).toBe(
+      0,
+    );
   });
 });
