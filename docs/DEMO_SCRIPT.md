@@ -1,10 +1,9 @@
-# Judge demo script
+# Judge demonstration
 
-1. Synchronize fixture `18241006` and ingest a real LIVE score observation.
-2. Run `pnpm txline:fetch-proof --fixture-id 18241006 --sequence SEQ --stat-keys 1,2`.
-3. Show ordered keys, bounded stat values, proof-node counts, and the TxLINE proof payload digest.
-4. Run `pnpm txline:verify-proof --fixture-id 18241006 --sequence SEQ --stat-keys 1,2`.
-5. Show the matching devnet program, daily scores PDA, exact predicates, and read-only validation result.
-6. State clearly that a current in-play proof is observation evidence, not final settlement evidence.
-7. Run the separate synthetic demo-credit settlement and show its Application receipt digest.
-8. Do not claim real proof-triggered payout or future real-value settlement.
+1. Open /judge and show **Real TxLINE data and Solana proof verification**.
+2. Show fixture 18241006, sequence 962, game_finalised, score 1–2, keys/values 1,2, and the proof digest.
+3. Show the documented devnet program, daily scores PDA, and read-only VERIFIED status.
+4. State: “Final match observation verified. No matching real-market settlement receipt is linked.”
+5. Move to **Synthetic demo-credit prediction and settlement**.
+6. Start a session, open a fictional position, run pnpm demo:run, and inspect its separate receipt.
+7. State that the synthetic payout was not triggered by the real proof.

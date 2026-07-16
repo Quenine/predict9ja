@@ -1,11 +1,9 @@
 # Hackathon scope
 
-Batch 5 adds TxLINE score-stat proof retrieval and read-only Solana validation. It does not add TxLINE odds, USDC, escrow, asset transfers, a custom program, real-money features, wallet authentication, or automatic proof-triggered settlement.
+Predict9ja combines real TxLINE fixture/score evidence and read-only Solana proof verification with a separate synthetic demo-credit prediction workflow.
 
-Predict9ja World Cup Arena demonstrates the path from a football fixture to a prediction market, demo-credit position, deterministic outcome, and proof-backed settlement receipt.
+Implemented: guest-JWT authentication, fixture snapshots, score snapshots/history/SSE, replay, strict proof normalization, canonical digests, deterministic retry, Solana devnet validation, anonymous sessions, demo-credit ledger, market resolution, settlement, and receipts.
 
-This first batch establishes repository, UI, domain, data, and ingestion boundaries. TxLINE is the intended primary sports-data source, but live authentication, requests, and streams are not implemented. Hackathon transactions use demo credits. Real-money products, Naira settlement, production crypto settlement, wallets, paid services, and production authentication are outside the submission scope.
+Authoritative evidence is fixture 18241006, sequence 962, explicit game_finalised, score 1–2, and read-only VERIFIED. It is final match evidence with no linked real-market settlement receipt.
 
-The application must remain testable without a wallet or paid service. Codex assists implementation; the project is reviewed, controlled, and submitted by its human owner.
-
-Batch 3 implements credential-gated TxLINE score snapshots, history, SSE ingestion, and deterministic replay. It does not implement odds, trading, balances, predictions, market resolution, settlement, or proofs.
+Out of scope: real money, deposits, withdrawals, custody, wallet authentication, TxLINE odds, and automatic real-proof settlement.

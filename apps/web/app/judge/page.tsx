@@ -1,90 +1,115 @@
 import { db } from "@predict9ja/db";
 import Link from "next/link";
+import { judgeEvidenceState, selectJudgeProof } from "./evidence";
 import { StartSession } from "./start-session";
+
 export const dynamic = "force-dynamic";
+const fixtureSourceId = "18241006";
+
 export default async function Judge() {
-  const [fixture, proof] = await Promise.all([
-    db.fixture.findUnique({
-      where: { sourceId: "18241006" },
-      include: {
-        scoreObservations: {
-          where: { sourceMode: "LIVE" },
-          orderBy: { providerSequence: "desc" },
-          take: 1,
+  const include = { scoreObservation: true, receipt: true } as const;
+  const [fixture, verifiedFinal, fallback] = await Promise.all([
+    db.fixture.findUnique({ where: { sourceId: fixtureSourceId } }),
+    db.scoreProofVerification.findFirst({
+      where: {
+        fixtureSourceId,
+        validationStatus: "VERIFIED",
+        observationClassification: "FINAL_MATCH_OBSERVATION",
+        scoreObservation: {
+          sourceMode: "LIVE",
+          action: "game_finalised",
+          finalised: true,
         },
       },
+      include,
+      orderBy: { verifiedAt: "desc" },
     }),
     db.scoreProofVerification.findFirst({
-      where: { fixtureSourceId: "18241006" },
+      where: { fixtureSourceId },
+      include,
       orderBy: { updatedAt: "desc" },
     }),
   ]);
+  const proof = selectJudgeProof(verifiedFinal, fallback);
+  const evidence = judgeEvidenceState(proof);
+  const statKeys = Array.isArray(proof?.statKeys) ? proof.statKeys.join(", ") : "not available";
+  const statValues = Array.isArray(proof?.statValues)
+    ? proof.statValues.join(", ")
+    : "not available";
+  const score = proof?.scoreObservation
+    ? `${proof.scoreObservation.participant1Goals ?? "–"}–${
+        proof.scoreObservation.participant2Goals ?? "–"
+      }`
+    : "not available";
+
   return (
     <main className="shell">
       <div className="eyebrow">Judge walkthrough</div>
-      <h1>Demo-credit judge walkthrough</h1>
-      <StartSession />
-      <section className="grid">
-        <article className="card">
-          <h2>1–3. Session and position</h2>
-          <p>
-            Use the fictional fixture and isolated demo credits for the settlement demonstration.
-          </p>
-          <Link href="/arena/synthetic-kora-savanna-001">Open synthetic fixture</Link>
-        </article>
-        <article className="card">
-          <h2>4–6. Replay and resolve</h2>
-          <p>
-            <code>pnpm demo:run</code> resolves only after explicit synthetic{" "}
-            <code>game_finalised</code>.
-          </p>
-        </article>
-        <article className="card">
-          <h2>7–8. Inspect</h2>
-          <p>Inspect the ledger-backed demo payout and its separate application receipt.</p>
-          <Link href="/portfolio">Open portfolio</Link>
-        </article>
-      </section>
+      <h1>Predict9ja evidence and demo flow</h1>
+
       <section className="card observations">
-        <h2>Proof Verification</h2>
-        <ol>
-          <li>Real TxLINE fixture synchronized: {fixture ? "yes" : "not yet"}</li>
-          <li>
-            Real score sequence observed:{" "}
-            {fixture?.scoreObservations[0]?.providerSequence ?? "not yet"}
-          </li>
-          <li>Ordered stat keys requested: 1, 2</li>
-          <li>
-            Merkle proof fetched:{" "}
-            {proof?.fetchStatus === "FETCHED" ? "yes" : (proof?.fetchStatus ?? "not requested")}
-          </li>
-          <li>Proof normalized and digested: {proof?.proofPayloadDigest ? "yes" : "not yet"}</li>
-          <li>
-            Matching devnet program and daily-root PDA selected:{" "}
-            {proof?.dailyScoresPda ? "yes" : "not yet"}
-          </li>
-          <li>
-            <code>validateStatV2</code> executed through read-only view:{" "}
-            {proof && proof.validationStatus !== "NOT_REQUESTED" ? "yes" : "not yet"}
-          </li>
-          <li>Result: {proof?.validationStatus ?? "not requested"}</li>
-        </ol>
+        <h2>Real TxLINE data and Solana proof verification</h2>
         <p>
-          <strong>
-            {proof?.validationStatus === "VERIFIED" &&
-            proof.observationClassification === "FINAL_MATCH_OBSERVATION"
-              ? "Final match observation verified"
-              : "Verified observation — not final settlement evidence"}
-          </strong>
+          <strong>{evidence.wording}</strong>
         </p>
-        {proof?.validationStatus === "VERIFIED" &&
-          proof.settlementEvidenceClassification === "FINAL_DATA_VERIFIED_NO_RECEIPT" && (
-            <p>No matching market settlement receipt is linked to this proof.</p>
-          )}
+        <dl>
+          <dt>Real TxLINE fixture</dt>
+          <dd>{fixture?.sourceId ?? "not available"}</dd>
+          <dt>Final score</dt>
+          <dd>{score}</dd>
+          <dt>Final provider sequence</dt>
+          <dd>{proof?.providerSequence ?? "not available"}</dd>
+          <dt>Source action</dt>
+          <dd>{proof?.scoreObservation?.action ?? "not available"}</dd>
+          <dt>TxLINE proof payload digest</dt>
+          <dd className="digest">{proof?.proofPayloadDigest ?? "not available"}</dd>
+          <dt>Ordered stat keys</dt>
+          <dd>{statKeys}</dd>
+          <dt>Verified stat values</dt>
+          <dd>{statValues}</dd>
+          <dt>Solana network</dt>
+          <dd>{proof?.network ?? "not available"}</dd>
+          <dt>TxLINE program ID</dt>
+          <dd className="digest">{proof?.programId ?? "not available"}</dd>
+          <dt>Daily scores PDA</dt>
+          <dd className="digest">{proof?.dailyScoresPda ?? "not available"}</dd>
+          <dt>Read-only validation</dt>
+          <dd>{proof?.validationStatus ?? "not requested"}</dd>
+          <dt>Evidence classification</dt>
+          <dd>{evidence.wording}</dd>
+          <dt>Verified timestamp</dt>
+          <dd>{proof?.verifiedAt?.toISOString() ?? "not available"}</dd>
+        </dl>
+        {evidence.state === "FINAL_MATCH" && (
+          <p>No matching real-market settlement receipt is linked to this proof.</p>
+        )}
+      </section>
+
+      <section className="observations">
+        <h2>Synthetic demo-credit prediction and settlement</h2>
         <p>
-          The synthetic settlement demonstration is separate. Future production real-value
-          settlement is not implemented.
+          This isolated demonstration uses fictional credits and does not imply that the real TxLINE
+          proof triggered a payout.
         </p>
+        <StartSession />
+        <div className="grid">
+          <article className="card">
+            <h3>1. Open a demo position</h3>
+            <p>Use the fictional fixture and isolated demo credits.</p>
+            <Link href="/arena/synthetic-kora-savanna-001">Open synthetic fixture</Link>
+          </article>
+          <article className="card">
+            <h3>2. Replay and resolve</h3>
+            <p>
+              <code>pnpm demo:run</code> resolves only after synthetic <code>game_finalised</code>.
+            </p>
+          </article>
+          <article className="card">
+            <h3>3. Inspect the receipt</h3>
+            <p>Review the demo-credit ledger and separate application receipt.</p>
+            <Link href="/portfolio">Open portfolio</Link>
+          </article>
+        </div>
       </section>
     </main>
   );

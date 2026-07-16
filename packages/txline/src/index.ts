@@ -18,7 +18,7 @@ export const TXLINE_ORIGINS = {
 export const txlineEnvironmentSchema = z.object({
   TXLINE_NETWORK: z.enum(["devnet", "mainnet"]).default("devnet"),
   TXLINE_API_TOKEN: z.string().min(1, "TXLINE_API_TOKEN is required"),
-  TXLINE_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().max(60_000).default(10_000),
+  TXLINE_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().max(60_000).default(30_000),
 });
 export type TxlineEnvironment = z.infer<typeof txlineEnvironmentSchema>;
 export type TxlineConfig = Readonly<{

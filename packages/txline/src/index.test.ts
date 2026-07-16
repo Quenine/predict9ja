@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  configFromEnvironment,
   createHttpTxlineClient,
   normalizeSnapshot,
   TxlineHistoricalUnavailableError,
@@ -8,6 +9,12 @@ import {
   TxlineRateLimitError,
   TxlineSubscriptionError,
 } from "./index";
+
+describe("TxLINE configuration", () => {
+  it("defaults request timeout to 30 seconds", () => {
+    expect(configFromEnvironment({ TXLINE_API_TOKEN: "placeholder" }).timeoutMs).toBe(30_000);
+  });
+});
 
 const START_SECONDS = 1_781_546_400;
 const START_MILLISECONDS = START_SECONDS * 1_000;

@@ -36,6 +36,7 @@ jobs:
       - run: pnpm db:seed
       - run: pnpm db:test:prepare
       - run: pnpm verify:foundation
+      - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

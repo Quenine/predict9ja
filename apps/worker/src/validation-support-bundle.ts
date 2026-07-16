@@ -1,5 +1,6 @@
 import { getProofVerification } from "@predict9ja/db";
 import { requiredOption } from "./arguments";
+import { buildValidationSupportBundle } from "./support-bundle";
 
 const value = await getProofVerification(requiredOption("verification-id"));
 if (!value) throw new Error("VERIFICATION_NOT_FOUND");
@@ -43,21 +44,25 @@ const dailyRootPda =
   value.dailyScoresPda ??
   (typeof preflight.dailyScoresPda === "string" ? preflight.dailyScoresPda : null);
 console.log(
-  JSON.stringify({
-    network: value.network,
-    endpointCategory: "PROOF_FETCH",
-    httpStatus: null,
-    fixtureId: value.fixtureSourceId,
-    sequence: value.providerSequence,
-    statKeys: value.statKeys,
-    statValues: value.statValues,
-    proofTimestamp: value.targetTimestamp?.toISOString() ?? null,
-    epochDay,
-    programId,
-    dailyRootPda,
-    providerMode:
-      typeof preflight.providerMode === "string" ? preflight.providerMode : value.providerMode,
-    diagnostic,
-    idlUpstreamCommit: "eba4cb4d578bdb5cfad3c22dfd134f012496e445",
-  }),
+  JSON.stringify(
+    buildValidationSupportBundle({
+      network: value.network,
+      fixtureId: value.fixtureSourceId,
+      sequence: value.providerSequence,
+      statKeys: value.statKeys,
+      statValues: value.statValues,
+      proofTimestamp: value.targetTimestamp?.toISOString() ?? null,
+      proofPayloadDigest: value.proofPayloadDigest,
+      validationStatus: value.validationStatus,
+      observationClassification: value.observationClassification,
+      settlementEvidenceClassification: value.settlementEvidenceClassification,
+      verifiedAt: value.verifiedAt?.toISOString() ?? null,
+      epochDay,
+      programId,
+      dailyRootPda,
+      providerMode:
+        typeof preflight.providerMode === "string" ? preflight.providerMode : value.providerMode,
+      diagnostic,
+    }),
+  ),
 );

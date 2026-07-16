@@ -19,7 +19,8 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
     <html lang="en">
       <body>
         <div className="notice" role="status">
-          Development preview — all fixtures, markets and credits shown are synthetic.
+          Hackathon prototype — real TxLINE sports evidence; demo-credit markets and no real-value
+          transactions.
         </div>
         <header className="shell nav">
           <Link href="/" className="brand">

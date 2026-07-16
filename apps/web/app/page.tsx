@@ -26,7 +26,9 @@ export default function Home() {
         </article>
         <article className="card">
           <h2>Verify</h2>
-          <p>Trace deterministic demo settlement without claiming a TxLINE cryptographic proof.</p>
+          <p>
+            Retrieve TxLINE proof data and validate it through the TxLINE Solana devnet program.
+          </p>
         </article>
       </section>
     </main>

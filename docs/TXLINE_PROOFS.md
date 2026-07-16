@@ -1,18 +1,9 @@
 # TxLINE score-stat proofs
 
-Predict9ja calls `GET /api/scores/stat-validation` with `fixtureId`, non-zero `seq`, and an ordered comma-separated `statKeys` list. The first exact-score proof requests keys `1,2`; indexes in the V2 strategy refer to this order, not the numeric key.
+Predict9ja requests an exact fixture, sequence, and ordered stat-key list. Responses undergo strict bounded normalization before canonical SHA-256 digesting.
 
-Responses are strictly normalized. Fixture identity, positional counts, bounded timestamps, non-empty proof arrays, boolean sibling directions, and exactly 32-byte hashes are required. Hashes may use documented byte arrays, hex, or base64. Complete provider responses and proof arrays are never logged or persisted.
+Raw responses are not archived. A bounded normalized proof envelope is persisted for deterministic retry without refetching. Full proof arrays, credentials, JWTs, and wallet material are never logged or emitted in support bundles.
 
-The canonical SHA-256 **TxLINE proof payload digest** covers the network, fixture, sequence, ordered keys and values, summary timestamps, roots, proof bytes, and sibling directions. It is neither a Merkle root nor the **Application receipt digest**.
+The authoritative proof is fixture 18241006, sequence 962, keys/values 1,2, digest 0abc3af2ebb38623b3d2e89ebb4e19071e4b867be814c7107d0fa7d8921808a7. It is read-only VERIFIED and FINAL_MATCH_OBSERVATION.
 
-Official devnet artifacts are vendored byte-for-byte from:
-
-- Repository: https://github.com/txodds/tx-on-chain
-- Commit: `eba4cb4d578bdb5cfad3c22dfd134f012496e445`
-- IDL: `examples/devnet/idl/txoracle.json`
-- Generated type: `examples/devnet/types/txoracle.ts`
-- IDL SHA-256: `225BF7B0335D4BE64CBE5F42A5A20E1122FE21E244AF1C837574CDEFC9E33ADA`
-- Type SHA-256: `3E84B314949F528AEDB5DFC90188CD9FAC906E02410C72E32E69027DF15D6404`
-
-An observed in-play proof is shown as “Verified observation — not final settlement evidence.” Only matching `game_finalised` evidence may be linked to a receipt as final settlement data.
+Finality and receipt linkage are separate. This proof is FINAL_DATA_VERIFIED_NO_RECEIPT; only an exact live receipt can become FINAL_SETTLEMENT_VERIFIED.

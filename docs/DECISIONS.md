@@ -1,22 +1,14 @@
-# Decisions
+# Architecture decisions
 
-11. Browser demo identity comes only from an HttpOnly opaque session cookie; request bodies never select accounts.
-12. Demo balances reconcile to uniquely referenced append-only ledger entries.
-13. Quotes and share calculations use basis points and microshares with floor rounding.
-14. Application receipt digests are distinct from future TxLINE proofs.
-
-15. TxLINE is the primary sports-data source. This repository currently defines its boundary without inventing provider fields.
-16. The web app and persistent ingestion worker are separate processes.
-17. Hackathon transactions use integer demo credits with no cash value.
-18. Real-money, Naira, and production crypto settlement are outside submission scope.
-19. Raw TxLINE datasets and credentials must not be committed. Only normalized operational and settlement data is stored.
-20. Synthetic mode keeps the application testable without a wallet or paid service.
-21. Market rule identifiers are versioned and unique per fixture to preserve resolution semantics.
-22. Codex is an implementation assistant; the human owner reviews, controls, and submits the project.
-
-23. TxLINE origins are selected only by devnet/mainnet; host overrides are test injection only.
-24. Malformed snapshot records are counted and rejected individually without raw-payload persistence.
-25. The TxLINE proof payload digest, Solana Merkle root, and application receipt digest are separate concepts and labels.
-26. Solana validation uses only `validateStatV2(...).view()` with an ephemeral in-memory wallet; no transaction, private-key persistence, or SOL is required.
-27. Ordered stat keys are part of proof identity and digest semantics.
-28. In-play proof verification records observation provenance only; final settlement evidence requires the matching explicit finalisation observation and receipt.
+1. TxLINE is the external sports-evidence authority.
+2. JWTs and API tokens remain server-only and are never logged.
+3. Raw responses are not archived; strict normalized records are persisted.
+4. A bounded normalized proof envelope and digest support deterministic retry.
+5. Ordered stat keys are part of identity.
+6. Solana validation is read-only and IDL/program/network pinned.
+7. Normal validation may use an ephemeral provider; guarded diagnostics may use a disposable funded devnet wallet.
+8. Wallet secret bytes and paths are never persisted or logged.
+9. Explicit live game_finalised plus finalised=true is authoritative finality.
+10. Observation finality and receipt linkage are separate classifications.
+11. Fixture 18241006 sequence 962 score 1–2 is verified with no linked real-market receipt.
+12. Demo-credit markets are isolated and have no monetary value.
