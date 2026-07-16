@@ -216,6 +216,9 @@ export async function settleFixture(sourceId: string, client: PrismaClient = db)
 export function getReceipt(receiptId: string, client: PrismaClient = db) {
   return client.resolutionReceipt.findUnique({
     where: { id: receiptId },
-    include: { market: { include: { fixture: true } } },
+    include: {
+      market: { include: { fixture: true } },
+      proofVerification: { include: { scoreObservation: true } },
+    },
   });
 }

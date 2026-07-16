@@ -4,6 +4,7 @@ import {
   createHttpTxlineClient,
   TxlineHistoricalUnavailableError,
   TxlineMalformedResponseError,
+  TxlineRequestTimeoutError,
 } from "@predict9ja/txline";
 import { requiredOption } from "./arguments";
 import {
@@ -49,7 +50,17 @@ if (availability === "TOO_RECENT" || availability === "TOO_OLD") {
       }),
     );
   } catch (error) {
-    if (error instanceof TxlineHistoricalUnavailableError) {
+    if (error instanceof TxlineRequestTimeoutError) {
+      console.log(
+        JSON.stringify({
+          fixtureId,
+          imported: false,
+          error: error.code,
+          endpointCategory: error.endpointCategory,
+        }),
+      );
+      process.exitCode = 2;
+    } else if (error instanceof TxlineHistoricalUnavailableError) {
       console.log(
         JSON.stringify({
           fixtureId: error.fixtureId,

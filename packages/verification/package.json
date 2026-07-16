@@ -1,0 +1,30 @@
+{
+  "name": "@predict9ja/verification",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint src --ignore-pattern src/vendor/**",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana/web3.js": "^1.98.4",
+    "bn.js": "^5.2.2",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@predict9ja/config": "workspace:*",
+    "@types/node": "^22.15.32",
+    "@types/bn.js": "^5.2.0",
+    "eslint": "^9.29.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.3"
+  }
+}

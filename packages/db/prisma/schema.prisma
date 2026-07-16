@@ -1,6 +1,7 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -11,6 +12,7 @@ enum SourceMode {
   REPLAY
   SYNTHETIC
 }
+
 enum FixtureStatus {
   SCHEDULED
   LIVE
@@ -18,6 +20,7 @@ enum FixtureStatus {
   CANCELLED
   UNKNOWN
 }
+
 enum MarketStatus {
   DRAFT
   ACTIVE
@@ -26,21 +29,45 @@ enum MarketStatus {
   RESOLVED
   VOID
 }
+
 enum SettlementStatus {
   PENDING
   SETTLED
   VOID
 }
+
 enum ProofStatus {
   NOT_REQUESTED
   VERIFIED
   FAILED
 }
+
+enum ProofFetchStatus {
+  NOT_REQUESTED
+  FETCHING
+  FETCHED
+  UNAVAILABLE
+  MALFORMED
+  FAILED
+}
+
+enum OnChainValidationStatus {
+  NOT_REQUESTED
+  VERIFYING
+  VERIFIED
+  REJECTED
+  RPC_UNAVAILABLE
+  NETWORK_MISMATCH
+  PROGRAM_MISMATCH
+  FAILED
+}
+
 enum QuoteSource {
   SYNTHETIC
   ADMIN_DEMO
   TXLINE
 }
+
 enum LedgerEntryType {
   SESSION_GRANT
   POSITION_PURCHASE
@@ -50,293 +77,351 @@ enum LedgerEntryType {
 }
 
 model DemoUser {
-  id String @id @default(cuid())
+  id          String     @id @default(cuid())
   displayName String
-  credits Int @default(10000)
-  trades Trade[]
-  positions Position[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  credits     Int        @default(10000)
+  trades      Trade[]
+  positions   Position[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Fixture {
-  id String @id @default(cuid())
-  sourceId String @unique
-  sourceMode SourceMode
-  homeTeam String
-  awayTeam String
-  startsAt DateTime
-  status FixtureStatus
-  homeScore Int?
-  awayScore Int?
-  participant1Name String
-  participant2Name String
+  id                 String                   @id @default(cuid())
+  sourceId           String                   @unique
+  sourceMode         SourceMode
+  homeTeam           String
+  awayTeam           String
+  startsAt           DateTime
+  status             FixtureStatus
+  homeScore          Int?
+  awayScore          Int?
+  participant1Name   String
+  participant2Name   String
   participant1IsHome Boolean
-  markets Market[]
-  scoreObservations ScoreObservation[]
-  scoreProjection FixtureScoreProjection?
-  replayState ReplayScoreState?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  markets            Market[]
+  scoreObservations  ScoreObservation[]
+  scoreProjection    FixtureScoreProjection?
+  proofVerifications ScoreProofVerification[]
+  replayState        ReplayScoreState?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
   @@index([startsAt, status])
 }
 
 model Market {
-  id String @id @default(cuid())
-  fixtureId String
-  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
-  type String
-  title String
-  status MarketStatus @default(DRAFT)
-  displayOrder Int @default(0)
-  closeAt DateTime
-  settlementStatus SettlementStatus @default(PENDING)
-  ruleVersion String
-  outcomes MarketOutcome[]
-  trades Trade[]
-  positions Position[]
-  receipt ResolutionReceipt?
-  quotes OutcomeQuote[]
-  demoPurchases DemoPurchase[]
-  demoPositions DemoPosition[]
-  lifecycleAudits MarketLifecycleAudit[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String                 @id @default(cuid())
+  fixtureId        String
+  fixture          Fixture                @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  type             String
+  title            String
+  status           MarketStatus           @default(DRAFT)
+  displayOrder     Int                    @default(0)
+  closeAt          DateTime
+  settlementStatus SettlementStatus       @default(PENDING)
+  ruleVersion      String
+  outcomes         MarketOutcome[]
+  trades           Trade[]
+  positions        Position[]
+  receipt          ResolutionReceipt?
+  quotes           OutcomeQuote[]
+  demoPurchases    DemoPurchase[]
+  demoPositions    DemoPosition[]
+  lifecycleAudits  MarketLifecycleAudit[]
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
   @@unique([fixtureId, ruleVersion])
   @@index([status])
 }
 
 model MarketOutcome {
-  id String @id @default(cuid())
-  marketId String
-  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  key String
-  label String
-  trades Trade[]
-  positions Position[]
-  quotes OutcomeQuote[]
+  id            String         @id @default(cuid())
+  marketId      String
+  market        Market         @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  key           String
+  label         String
+  trades        Trade[]
+  positions     Position[]
+  quotes        OutcomeQuote[]
   demoPurchases DemoPurchase[]
   demoPositions DemoPosition[]
+
   @@unique([marketId, key])
 }
 
 model Trade {
-  id String @id @default(cuid())
-  userId String
-  user DemoUser @relation(fields: [userId], references: [id])
-  marketId String
-  market Market @relation(fields: [marketId], references: [id])
+  id        String        @id @default(cuid())
+  userId    String
+  user      DemoUser      @relation(fields: [userId], references: [id])
+  marketId  String
+  market    Market        @relation(fields: [marketId], references: [id])
   outcomeId String
-  outcome MarketOutcome @relation(fields: [outcomeId], references: [id])
-  credits Int
-  createdAt DateTime @default(now())
+  outcome   MarketOutcome @relation(fields: [outcomeId], references: [id])
+  credits   Int
+  createdAt DateTime      @default(now())
+
   @@index([userId, createdAt])
   @@index([marketId])
 }
 
 model Position {
-  id String @id @default(cuid())
-  userId String
-  user DemoUser @relation(fields: [userId], references: [id])
-  marketId String
-  market Market @relation(fields: [marketId], references: [id])
+  id        String        @id @default(cuid())
+  userId    String
+  user      DemoUser      @relation(fields: [userId], references: [id])
+  marketId  String
+  market    Market        @relation(fields: [marketId], references: [id])
   outcomeId String
-  outcome MarketOutcome @relation(fields: [outcomeId], references: [id])
-  credits Int
-  updatedAt DateTime @updatedAt
+  outcome   MarketOutcome @relation(fields: [outcomeId], references: [id])
+  credits   Int
+  updatedAt DateTime      @updatedAt
+
   @@unique([userId, marketId, outcomeId])
 }
 
 model ResolutionReceipt {
-  id String @id @default(cuid())
-  marketId String @unique
-  market Market @relation(fields: [marketId], references: [id])
-  winningOutcomeKey String?
-  settlementStatus SettlementStatus @default(PENDING)
-  proofStatus ProofStatus @default(NOT_REQUESTED)
-  proofHash String?
-  homeScore Int?
-  awayScore Int?
-  resolvedAt DateTime?
-  fixtureId String?
-  ruleVersion String?
-  finalObservationId String?
-  providerSequence Int?
-  providerTimestamp DateTime?
-  sourceMode SourceMode?
-  scoreAction String?
-  participant1Goals Int?
-  participant2Goals Int?
-  participant1IsHome Boolean?
-  resolutionStatus String?
-  integrityDigest String? @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                  String                  @id @default(cuid())
+  marketId            String                  @unique
+  market              Market                  @relation(fields: [marketId], references: [id])
+  winningOutcomeKey   String?
+  settlementStatus    SettlementStatus        @default(PENDING)
+  proofStatus         ProofStatus             @default(NOT_REQUESTED)
+  proofHash           String?
+  homeScore           Int?
+  awayScore           Int?
+  resolvedAt          DateTime?
+  fixtureId           String?
+  ruleVersion         String?
+  finalObservationId  String?
+  providerSequence    Int?
+  providerTimestamp   DateTime?
+  sourceMode          SourceMode?
+  scoreAction         String?
+  participant1Goals   Int?
+  participant2Goals   Int?
+  participant1IsHome  Boolean?
+  resolutionStatus    String?
+  integrityDigest     String?                 @unique
+  proofVerificationId String?                 @unique
+  proofVerification   ScoreProofVerification? @relation(fields: [proofVerificationId], references: [id])
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
   @@index([proofHash])
 }
 
 model AnonymousSession {
-  id String @id @default(cuid())
-  tokenHash String @unique
-  account DemoAccount?
-  createdAt DateTime @default(now())
-  lastSeenAt DateTime @default(now())
-  revokedAt DateTime?
+  id         String       @id @default(cuid())
+  tokenHash  String       @unique
+  account    DemoAccount?
+  createdAt  DateTime     @default(now())
+  lastSeenAt DateTime     @default(now())
+  revokedAt  DateTime?
 }
 
 model DemoAccount {
-  id String @id @default(cuid())
-  sessionId String? @unique
-  session AnonymousSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  label String?
-  availableCredits Int @default(0)
-  ledgerEntries CreditLedgerEntry[]
-  purchases DemoPurchase[]
-  positions DemoPosition[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String              @id @default(cuid())
+  sessionId        String?             @unique
+  session          AnonymousSession?   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  label            String?
+  availableCredits Int                 @default(0)
+  ledgerEntries    CreditLedgerEntry[]
+  purchases        DemoPurchase[]
+  positions        DemoPosition[]
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
   @@index([availableCredits])
 }
 
 model CreditLedgerEntry {
-  id String @id @default(cuid())
-  accountId String
-  account DemoAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  amount Int
-  entryType LedgerEntryType
-  reference String @unique
-  marketId String?
+  id         String          @id @default(cuid())
+  accountId  String
+  account    DemoAccount     @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amount     Int
+  entryType  LedgerEntryType
+  reference  String          @unique
+  marketId   String?
   positionId String?
-  receiptId String?
-  createdAt DateTime @default(now())
+  receiptId  String?
+  createdAt  DateTime        @default(now())
+
   @@index([accountId, createdAt])
 }
 
 model OutcomeQuote {
-  id String @id @default(cuid())
-  marketId String
-  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
-  outcomeId String
-  outcome MarketOutcome @relation(fields: [outcomeId], references: [id], onDelete: Cascade)
-  version Int
+  id               String        @id @default(cuid())
+  marketId         String
+  market           Market        @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  outcomeId        String
+  outcome          MarketOutcome @relation(fields: [outcomeId], references: [id], onDelete: Cascade)
+  version          Int
   priceBasisPoints Int
-  source QuoteSource
-  active Boolean @default(true)
-  createdAt DateTime @default(now())
+  source           QuoteSource
+  active           Boolean       @default(true)
+  createdAt        DateTime      @default(now())
+
   @@unique([marketId, outcomeId, version])
   @@index([marketId, active])
 }
 
 model DemoPurchase {
-  id String @id @default(cuid())
-  accountId String
-  account DemoAccount @relation(fields: [accountId], references: [id])
-  marketId String
-  market Market @relation(fields: [marketId], references: [id])
-  outcomeId String
-  outcome MarketOutcome @relation(fields: [outcomeId], references: [id])
-  idempotencyKey String
-  stakeCredits Int
-  quoteVersion Int
-  priceBasisPoints Int
-  sharesMicros BigInt
+  id                     String        @id @default(cuid())
+  accountId              String
+  account                DemoAccount   @relation(fields: [accountId], references: [id])
+  marketId               String
+  market                 Market        @relation(fields: [marketId], references: [id])
+  outcomeId              String
+  outcome                MarketOutcome @relation(fields: [outcomeId], references: [id])
+  idempotencyKey         String
+  stakeCredits           Int
+  quoteVersion           Int
+  priceBasisPoints       Int
+  sharesMicros           BigInt
   potentialPayoutCredits Int
-  createdAt DateTime @default(now())
+  createdAt              DateTime      @default(now())
+
   @@unique([accountId, idempotencyKey])
   @@index([marketId, createdAt])
 }
 
 model DemoPosition {
-  id String @id @default(cuid())
-  accountId String
-  account DemoAccount @relation(fields: [accountId], references: [id])
-  marketId String
-  market Market @relation(fields: [marketId], references: [id])
-  outcomeId String
-  outcome MarketOutcome @relation(fields: [outcomeId], references: [id])
-  stakeCredits Int
-  sharesMicros BigInt
+  id                     String        @id @default(cuid())
+  accountId              String
+  account                DemoAccount   @relation(fields: [accountId], references: [id])
+  marketId               String
+  market                 Market        @relation(fields: [marketId], references: [id])
+  outcomeId              String
+  outcome                MarketOutcome @relation(fields: [outcomeId], references: [id])
+  stakeCredits           Int
+  sharesMicros           BigInt
   potentialPayoutCredits Int
-  actualPayoutCredits Int?
-  settledAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  actualPayoutCredits    Int?
+  settledAt              DateTime?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
   @@unique([accountId, marketId, outcomeId])
   @@index([accountId, settledAt])
 }
 
 model MarketLifecycleAudit {
-  id String @id @default(cuid())
-  marketId String
-  market Market @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  id             String       @id @default(cuid())
+  marketId       String
+  market         Market       @relation(fields: [marketId], references: [id], onDelete: Cascade)
   previousStatus MarketStatus
-  newStatus MarketStatus
-  reasonCode String
-  actorType String
-  createdAt DateTime @default(now())
+  newStatus      MarketStatus
+  reasonCode     String
+  actorType      String
+  createdAt      DateTime     @default(now())
+
   @@index([marketId, createdAt])
 }
 
 model FeedCheckpoint {
-  id String @id @default(cuid())
-  sourceMode SourceMode
-  streamKey String
-  cursor String
-  metadata Json?
+  id                      String     @id @default(cuid())
+  sourceMode              SourceMode
+  streamKey               String
+  cursor                  String
+  metadata                Json?
   lastAcknowledgedEventId String?
-  lastProcessedSequence Int?
-  lastProcessedAt DateTime?
-  connectionOpenedAt DateTime?
-  lastMessageAt DateTime?
-  connectionStatus String?
-  safeErrorCategory String?
-  updatedAt DateTime @updatedAt
+  lastProcessedSequence   Int?
+  lastProcessedAt         DateTime?
+  connectionOpenedAt      DateTime?
+  lastMessageAt           DateTime?
+  connectionStatus        String?
+  safeErrorCategory       String?
+  updatedAt               DateTime   @updatedAt
+
   @@unique([sourceMode, streamKey])
 }
 
 model ScoreObservation {
-  id String @id @default(cuid())
-  fixtureId String
-  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
-  providerSequence Int
-  providerTimestamp DateTime
-  sseEventId String?
-  action String
-  phase String
-  period String?
-  participant1Goals Int?
-  participant2Goals Int?
-  finalised Boolean @default(false)
-  sourceMode SourceMode
-  acceptedAt DateTime @default(now())
-  createdAt DateTime @default(now())
+  id                 String                   @id @default(cuid())
+  fixtureId          String
+  fixture            Fixture                  @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  providerSequence   Int
+  providerTimestamp  DateTime
+  sseEventId         String?
+  action             String
+  phase              String
+  period             String?
+  participant1Goals  Int?
+  participant2Goals  Int?
+  finalised          Boolean                  @default(false)
+  sourceMode         SourceMode
+  proofVerifications ScoreProofVerification[]
+  acceptedAt         DateTime                 @default(now())
+  createdAt          DateTime                 @default(now())
+
   @@unique([fixtureId, providerSequence])
   @@index([fixtureId, providerTimestamp])
 }
 
+model ScoreProofVerification {
+  id                  String                  @id @default(cuid())
+  fixtureId           String
+  fixture             Fixture                 @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  scoreObservationId  String?
+  scoreObservation    ScoreObservation?       @relation(fields: [scoreObservationId], references: [id], onDelete: SetNull)
+  receipt             ResolutionReceipt?
+  fixtureSourceId     String
+  providerSequence    Int
+  network             String
+  statKeys            Json
+  statKeyIdentity     String
+  statValues          Json?
+  targetTimestamp     DateTime?
+  epochDay            Int?
+  dailyScoresPda      String?
+  programId           String?
+  proofPayloadDigest  String?
+  normalizedProof     Json?
+  diagnosticSummary   Json?
+  validationHistory   Json?
+  retryCount          Int                     @default(0)
+  providerMode        String?
+  fetchStatus         ProofFetchStatus        @default(NOT_REQUESTED)
+  validationStatus    OnChainValidationStatus @default(NOT_REQUESTED)
+  validationStrategy  String?
+  observationClassification String @default("LOCAL_OBSERVATION_NOT_FOUND")
+  settlementEvidenceClassification String @default("NOT_FINAL_SETTLEMENT_EVIDENCE")
+  classificationWarnings Json?
+  safeFailureCategory String?
+  fetchedAt           DateTime?
+  verifiedAt          DateTime?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  @@unique([network, fixtureSourceId, providerSequence, statKeyIdentity])
+  @@index([fetchStatus])
+  @@index([validationStatus])
+  @@index([fixtureId, providerSequence])
+}
+
 model FixtureScoreProjection {
-  fixtureId String @id
-  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
-  latestSequence Int
+  fixtureId               String     @id
+  fixture                 Fixture    @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  latestSequence          Int
   latestProviderTimestamp DateTime
-  latestAction String
-  latestPhase String
-  participant1Goals Int?
-  participant2Goals Int?
-  finalised Boolean @default(false)
-  sourceMode SourceMode
-  updatedAt DateTime @updatedAt
+  latestAction            String
+  latestPhase             String
+  participant1Goals       Int?
+  participant2Goals       Int?
+  finalised               Boolean    @default(false)
+  sourceMode              SourceMode
+  updatedAt               DateTime   @updatedAt
 }
 
 model ReplayScoreState {
-  fixtureId String @id
-  fixture Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
-  latestSequence Int?
-  phase String @default("UNKNOWN")
+  fixtureId         String   @id
+  fixture           Fixture  @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  latestSequence    Int?
+  phase             String   @default("UNKNOWN")
   participant1Goals Int?
   participant2Goals Int?
-  finalised Boolean @default(false)
-  status String @default("IDLE")
-  updatedAt DateTime @updatedAt
+  finalised         Boolean  @default(false)
+  status            String   @default("IDLE")
+  updatedAt         DateTime @updatedAt
 }
-

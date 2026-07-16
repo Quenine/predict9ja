@@ -16,3 +16,7 @@
 
 23. TxLINE origins are selected only by devnet/mainnet; host overrides are test injection only.
 24. Malformed snapshot records are counted and rejected individually without raw-payload persistence.
+25. The TxLINE proof payload digest, Solana Merkle root, and application receipt digest are separate concepts and labels.
+26. Solana validation uses only `validateStatV2(...).view()` with an ephemeral in-memory wallet; no transaction, private-key persistence, or SOL is required.
+27. Ordered stat keys are part of proof identity and digest semantics.
+28. In-play proof verification records observation provenance only; final settlement evidence requires the matching explicit finalisation observation and receipt.

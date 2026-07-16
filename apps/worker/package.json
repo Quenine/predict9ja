@@ -16,6 +16,13 @@
     "txline:probe-scores": "tsx src/probe-scores.ts",
     "txline:import-history": "tsx src/import-history.ts",
     "txline:stream-scores": "tsx src/stream-scores.ts",
+    "txline:fetch-proof": "tsx src/fetch-proof.ts",
+    "txline:verify-proof": "tsx src/verify-proof.ts",
+    "txline:verify-latest-score": "tsx src/verify-latest-score.ts",
+    "txline:diagnose-proof": "tsx src/diagnose-proof.ts",
+    "txline:retry-verification": "tsx src/retry-verification.ts",
+    "txline:ingest-score-snapshot": "tsx src/ingest-score-snapshot.ts",
+    "txline:validation-support-bundle": "tsx src/validation-support-bundle.ts",
     "txline:replay-scores": "tsx src/replay-scores.ts",
     "markets:generate": "tsx src/markets-generate.ts",
     "markets:resolve": "tsx src/markets-resolve.ts",
@@ -27,7 +34,9 @@
     "@predict9ja/domain": "workspace:*",
     "zod": "^3.25.67",
     "@predict9ja/db": "workspace:*",
-    "@predict9ja/txline": "workspace:*"
+    "@predict9ja/txline": "workspace:*",
+    "@predict9ja/verification": "workspace:*",
+    "@solana/web3.js": "^1.98.4"
   },
   "devDependencies": {
     "@predict9ja/config": "workspace:*",

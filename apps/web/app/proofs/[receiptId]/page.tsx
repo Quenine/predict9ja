@@ -1,36 +1,71 @@
 import { getReceipt } from "@predict9ja/db";
 import { notFound } from "next/navigation";
+import { PROOF_LABELS } from "../../proof-labels";
 export const dynamic = "force-dynamic";
 export default async function Proof({ params }: { params: Promise<{ receiptId: string }> }) {
   const { receiptId } = await params;
   const receipt = await getReceipt(receiptId);
   if (!receipt) notFound();
+  const proof = receipt.proofVerification;
+  const statKeys = proof?.statKeys as number[] | undefined;
+  const statValues = proof?.statValues as number[] | undefined;
+  const finalEvidence = proof?.settlementEvidenceClassification === "FINAL_SETTLEMENT_VERIFIED";
   return (
     <main className="shell">
       <div className="eyebrow">Settlement proof</div>
       <h1>Receipt</h1>
       <section className="card">
-        <p className="meta">{receipt.market.title}</p>
-        <h2>{receipt.winningOutcomeKey ?? "Void"}</h2>
+        <h2>Application resolution</h2>
+        <p>Rule version: {receipt.ruleVersion}</p>
         <p>
           Final score: {receipt.homeScore ?? "–"}–{receipt.awayScore ?? "–"}
         </p>
-        <p>Rule: {receipt.ruleVersion}</p>
-        <p>
-          Source: {receipt.sourceMode} observation #{receipt.providerSequence}
-        </p>
-        <p>Application resolution: {receipt.resolutionStatus}</p>
-        <p>Settlement: {receipt.settlementStatus}</p>
-        <p>TxLINE proof status: Not requested</p>
+        <p>Winning outcome: {receipt.winningOutcomeKey ?? "Void"}</p>
+        <p>Settlement status: {receipt.settlementStatus}</p>
         <p className="digest">
-          <strong>Application receipt digest</strong>
+          <strong>{PROOF_LABELS.applicationDigest}</strong>
           <br />
           {receipt.integrityDigest}
         </p>
-        <p>
-          This SHA-256 digest protects the bounded application receipt fields. It is not a TxLINE
-          cryptographic proof.
+      </section>
+      <section className="card observations">
+        <h2>TxLINE proof</h2>
+        <p>Status: {proof?.fetchStatus.replaceAll("_", " ").toLowerCase() ?? "not requested"}</p>
+        <p>Fixture ID: {proof?.fixtureSourceId ?? "not available"}</p>
+        <p>Sequence: {proof?.providerSequence ?? "not available"}</p>
+        <p>Stat keys: {statKeys?.join(", ") ?? "not available"}</p>
+        <p>Stat values: {statValues?.join(", ") ?? "not available"}</p>
+        <p>Fetched: {proof?.fetchedAt?.toISOString() ?? "not available"}</p>
+        <p className="digest">
+          <strong>{PROOF_LABELS.txlineDigest}</strong>
+          <br />
+          {proof?.proofPayloadDigest ?? "not available"}
         </p>
+      </section>
+      <section className="card observations">
+        <h2>{PROOF_LABELS.solanaValidation}</h2>
+        <p>
+          Status: {proof?.validationStatus.replaceAll("_", " ").toLowerCase() ?? "not requested"}
+        </p>
+        <p>Network: {proof?.network ?? "not available"}</p>
+        <p>Program ID: {proof?.programId ?? "not available"}</p>
+        <p>Daily scores PDA: {proof?.dailyScoresPda ?? "not available"}</p>
+        <p>Verified: {proof?.verifiedAt?.toISOString() ?? "not available"}</p>
+        {proof?.validationStatus === "VERIFIED" && (
+          <>
+            <p>
+              <strong>
+                {proof.observationClassification === "FINAL_MATCH_OBSERVATION"
+                  ? "Final match observation verified"
+                  : "Verified observation — not final settlement evidence"}
+              </strong>
+            </p>
+            {proof.settlementEvidenceClassification === "FINAL_DATA_VERIFIED_NO_RECEIPT" && (
+              <p>No matching market settlement receipt is linked to this proof.</p>
+            )}
+            {finalEvidence && <p>{PROOF_LABELS.final}</p>}
+          </>
+        )}
       </section>
     </main>
   );

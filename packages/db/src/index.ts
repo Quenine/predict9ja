@@ -5,6 +5,8 @@ export * from "./scores";
 export * from "./accounts";
 export * from "./markets";
 export * from "./resolution";
+export * from "./proofs";
+export * from "./proof-classification";
 
 const globalDatabase = globalThis as unknown as { prisma?: PrismaClient };
 export const db = globalDatabase.prisma ?? new PrismaClient();
@@ -37,6 +39,12 @@ export async function getAdminSummary() {
     unsettledMarkets,
     accounts,
     latestFinalised,
+    proofFetchCounts,
+    proofValidationCounts,
+    latestProofAttempt,
+    latestSuccessfulValidation,
+    localValueMismatches,
+    finalisationProofs,
   ] = await Promise.all([
     db.fixture.groupBy({ by: ["sourceMode"], _count: true }),
     db.feedCheckpoint.findUnique({
@@ -57,6 +65,20 @@ export async function getAdminSummary() {
       orderBy: { latestProviderTimestamp: "desc" },
       include: { fixture: true },
     }),
+    db.scoreProofVerification.groupBy({ by: ["fetchStatus"], _count: true }),
+    db.scoreProofVerification.groupBy({ by: ["validationStatus"], _count: true }),
+    db.scoreProofVerification.findFirst({ orderBy: { updatedAt: "desc" } }),
+    db.scoreProofVerification.findFirst({
+      where: { validationStatus: "VERIFIED" },
+      orderBy: { verifiedAt: "desc" },
+    }),
+    db.scoreProofVerification.count({ where: { safeFailureCategory: "LOCAL_VALUE_MISMATCH" } }),
+    db.scoreProofVerification.count({
+      where: {
+        validationStatus: "VERIFIED",
+        scoreObservation: { action: "game_finalised", finalised: true },
+      },
+    }),
   ]);
   return {
     fixtures,
@@ -74,6 +96,12 @@ export async function getAdminSummary() {
         account.ledgerEntries.reduce((sum, entry) => sum + entry.amount, 0),
     ),
     latestFinalised,
+    proofFetchCounts,
+    proofValidationCounts,
+    latestProofAttempt,
+    latestSuccessfulValidation,
+    localValueMismatches,
+    finalisationProofs,
   };
 }
 export type FixtureSyncReport = {

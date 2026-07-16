@@ -249,7 +249,7 @@ describe("historical HTTP responses", () => {
       fixtureId: "42",
       status: 200,
       reason: "EMPTY_BODY",
-      endpointCategory: "HISTORICAL_SCORES",
+      endpointCategory: "SCORE_HISTORY",
     });
   });
 
@@ -271,7 +271,7 @@ describe("historical HTTP responses", () => {
       fixtureId: "42",
       status: 200,
       reason: "MALFORMED_JSON",
-      endpointCategory: "HISTORICAL_SCORES",
+      endpointCategory: "SCORE_HISTORY",
     });
     expect(String(error)).not.toContain(providerPayload);
     expect(JSON.stringify(error)).not.toContain(providerPayload);

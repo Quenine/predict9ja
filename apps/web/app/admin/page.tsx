@@ -38,6 +38,36 @@ export default async function Admin() {
             ))}
           </article>
           <article className="card">
+            <h2>Proof operations</h2>
+            {summary.proofFetchCounts.map((item) => (
+              <p key={item.fetchStatus}>
+                Fetch {item.fetchStatus}: {item._count}
+              </p>
+            ))}
+            {summary.proofValidationCounts.map((item) => (
+              <p key={item.validationStatus}>
+                Validation {item.validationStatus}: {item._count}
+              </p>
+            ))}
+            <p>Latest attempt: {summary.latestProofAttempt?.updatedAt.toISOString() ?? "none"}</p>
+            <p>
+              Latest verified:{" "}
+              {summary.latestSuccessfulValidation?.verifiedAt?.toISOString() ?? "none"}
+            </p>
+            <p>Local/provider mismatches: {summary.localValueMismatches}</p>
+            <p>Finalisation proofs: {summary.finalisationProofs}</p>
+          </article>
+          <article className="card">
+            <h2>Solana validation configuration</h2>
+            <p>Network: {process.env.TXLINE_NETWORK ?? "devnet"}</p>
+            <p>
+              Program:{" "}
+              {(process.env.TXLINE_NETWORK ?? "devnet") === "devnet"
+                ? "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J"
+                : "9ExbZjAapQww1vfcisDmrngPinHTEfpjYRWMunJgcKaA"}
+            </p>
+          </article>
+          <article className="card">
             <h2>Latest fixture sync</h2>
             <p>{summary.checkpoint?.updatedAt.toISOString() ?? "No TxLINE sync recorded."}</p>
           </article>

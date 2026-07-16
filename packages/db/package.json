@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@predict9ja/domain": "workspace:*",
+    "@predict9ja/verification": "workspace:*",
     "@predict9ja/txline": "workspace:*",
     "@prisma/client": "^6.10.1"
   },

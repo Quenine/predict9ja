@@ -9,6 +9,9 @@ coverage
 .turbo
 
 .env
+*.wallet.json
+*.keypair.json
+validation-wallet*.json
 
 .env*
 
@@ -34,3 +37,22 @@ coverage/
 
 *.log
 *.tsbuildinfo
+
+node_modules/
+.next/
+dist/
+coverage/
+.turbo/
+.pnpm-store/
+
+.env
+.env.local
+.env.*.local
+.env.example
+
+*.log
+*.tsbuildinfo
+packages/db/prisma/dev.db
+
+_keys/
+*.keypair.json

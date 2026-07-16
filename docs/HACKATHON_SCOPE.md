@@ -1,6 +1,6 @@
 # Hackathon scope
 
-Batch 4 adds isolated anonymous demo sessions, ledger-backed demo-credit purchases, synthetic basis-point quotes, deterministic resolution/settlement, and bounded application receipts. It does not add real-money features, TxLINE odds or proofs, Solana validation, selling, or production authentication.
+Batch 5 adds TxLINE score-stat proof retrieval and read-only Solana validation. It does not add TxLINE odds, USDC, escrow, asset transfers, a custom program, real-money features, wallet authentication, or automatic proof-triggered settlement.
 
 Predict9ja World Cup Arena demonstrates the path from a football fixture to a prediction market, demo-credit position, deterministic outcome, and proof-backed settlement receipt.
 

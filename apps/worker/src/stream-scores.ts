@@ -5,6 +5,7 @@ import {
   normalizeScoreRecord,
   scoreRejectionReason,
   TxlineSubscriptionError,
+  TxlineRequestTimeoutError,
 } from "@predict9ja/txline";
 import { option } from "./arguments";
 const duration = Number(option("duration") ?? 0);
@@ -23,6 +24,7 @@ const report = {
   applied: 0,
 };
 let delay = 1000;
+let timeout: TxlineRequestTimeoutError | undefined;
 while (!controller.signal.aborted) {
   try {
     const checkpoint = await db.feedCheckpoint.findUnique({
@@ -77,6 +79,10 @@ while (!controller.signal.aborted) {
     delay = 1000;
   } catch (error) {
     if (controller.signal.aborted) break;
+    if (error instanceof TxlineRequestTimeoutError) {
+      timeout = error;
+      break;
+    }
     if (error instanceof TxlineSubscriptionError) throw error;
     await db.feedCheckpoint.updateMany({
       where: { sourceMode: "LIVE", streamKey: "scores" },
@@ -92,4 +98,13 @@ await db.feedCheckpoint.updateMany({
   where: { sourceMode: "LIVE", streamKey: "scores" },
   data: { connectionStatus: "STOPPED" },
 });
-console.log(JSON.stringify(report));
+if (timeout) {
+  console.log(
+    JSON.stringify({
+      ok: false,
+      error: timeout.code,
+      endpointCategory: timeout.endpointCategory,
+    }),
+  );
+  process.exitCode = 2;
+} else console.log(JSON.stringify(report));
