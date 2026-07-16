@@ -19,6 +19,11 @@ it("declares required strict-mode runtime environment variables", () => {
     ]),
   );
   expect(turbo.globalPassThroughEnv).toEqual(
-    expect.arrayContaining(["DATABASE_URL", "DEMO_SESSION_SECRET", "TXLINE_API_TOKEN"]),
+    expect.arrayContaining([
+      "DATABASE_URL",
+      "PRISMA_ACCELERATE_URL",
+      "DEMO_SESSION_SECRET",
+      "TXLINE_API_TOKEN",
+    ]),
   );
 });

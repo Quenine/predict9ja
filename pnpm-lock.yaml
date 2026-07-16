@@ -159,6 +159,9 @@ importers:
       "@prisma/client":
         specifier: ^6.10.1
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      "@prisma/extension-accelerate":
+        specifier: 2.0.2
+        version: 2.0.2(@prisma/client@6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3))
     devDependencies:
       "@predict9ja/config":
         specifier: workspace:*
@@ -1031,6 +1034,15 @@ packages:
       {
         integrity: sha512-RSYxtlYFl5pJ8ZePgMv0lZ9IzVCOdTPOegrs2qcbAEFrBI1G33h6wyC9kjQvo0DnYEhEVY0X4LsuFHXLKQk88g==,
       }
+
+  "@prisma/extension-accelerate@2.0.2":
+    resolution:
+      {
+        integrity: sha512-yZK6/k7uOEFpEsKoZezQS1CKDboPtBCQ0NyI70e1Un8tDiRgg80iWGyjsJmRpps2ZIut3MroHP+dyR3wVKh8lA==,
+      }
+    engines: { node: ">=18" }
+    peerDependencies:
+      "@prisma/client": ">=4.16.1"
 
   "@prisma/fetch-engine@6.19.3":
     resolution:
@@ -3797,6 +3809,10 @@ snapshots:
       "@prisma/fetch-engine": 6.19.3
       "@prisma/get-platform": 6.19.3
 
+  "@prisma/extension-accelerate@2.0.2(@prisma/client@6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3))":
+    dependencies:
+      "@prisma/client": 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+
   "@prisma/fetch-engine@6.19.3":
     dependencies:
       "@prisma/debug": 6.19.3
@@ -4611,7 +4627,7 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isomorphic-ws@4.0.1(ws@7.5.12(bufferutil@4.1.0)(utf-8-validate@6.0.6)):
+  isomorphic-ws@4.0.1(ws@7.5.12(bufferutil@4.1.0)):
     dependencies:
       ws: 7.5.12(bufferutil@4.1.0)(utf-8-validate@6.0.6)
 
@@ -4624,7 +4640,7 @@ snapshots:
       delay: 5.0.0
       es6-promisify: 5.0.0
       eyes: 0.1.8
-      isomorphic-ws: 4.0.1(ws@7.5.12(bufferutil@4.1.0)(utf-8-validate@6.0.6))
+      isomorphic-ws: 4.0.1(ws@7.5.12(bufferutil@4.1.0))
       json-stringify-safe: 5.0.1
       stream-json: 1.9.1
       uuid: 8.3.2

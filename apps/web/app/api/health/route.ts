@@ -32,7 +32,7 @@ export async function GET() {
         db.fixture.count({ where: { sourceId: "synthetic-kora-savanna-001" } }),
       ]),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("HEALTH_TIMEOUT")), 3_000),
+        setTimeout(() => reject(new Error("HEALTH_TIMEOUT")), 8_000),
       ),
     ]);
     return NextResponse.json({

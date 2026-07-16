@@ -23,9 +23,10 @@
   },
   "dependencies": {
     "@predict9ja/domain": "workspace:*",
-    "@predict9ja/verification": "workspace:*",
     "@predict9ja/txline": "workspace:*",
-    "@prisma/client": "^6.10.1"
+    "@predict9ja/verification": "workspace:*",
+    "@prisma/client": "^6.10.1",
+    "@prisma/extension-accelerate": "2.0.2"
   },
   "devDependencies": {
     "@predict9ja/config": "workspace:*",

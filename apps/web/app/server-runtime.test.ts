@@ -11,6 +11,12 @@ describe("web runtime environment", () => {
       new WebRuntimeEnvironmentError("WEB_DATABASE_ENV_MISSING"),
     );
   });
+  it("accepts either standard or Accelerate database configuration", () => {
+    expect(() => requireWebDatabaseEnvironment({ DATABASE_URL: "configured" })).not.toThrow();
+    expect(() =>
+      requireWebDatabaseEnvironment({ PRISMA_ACCELERATE_URL: "configured" }),
+    ).not.toThrow();
+  });
   it("requires a present and sufficiently long session secret", () => {
     expect(() => requireDemoSessionSecret({})).toThrowError(
       new WebRuntimeEnvironmentError("DEMO_SESSION_SECRET_MISSING"),

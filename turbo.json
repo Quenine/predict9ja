@@ -11,6 +11,7 @@
   ],
   "globalPassThroughEnv": [
     "DATABASE_URL",
+    "PRISMA_ACCELERATE_URL",
     "DATABASE_TEST_URL",
     "DEMO_SESSION_SECRET",
     "TXLINE_API_TOKEN",

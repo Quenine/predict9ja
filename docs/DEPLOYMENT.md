@@ -2,9 +2,9 @@
 
 ## Runtime and preparation
 
-Use Node 22, pnpm 10.12.1, PostgreSQL 16, and separate web/worker processes. Inject DATABASE_URL, DEMO_SESSION_SECRET, TXLINE_NETWORK, TXLINE_API_TOKEN, TXLINE_REQUEST_TIMEOUT_MS, SOLANA_RPC_URL, SOLANA_COMMITMENT, and SOLANA_VALIDATION_TIMEOUT_MS through a secret manager.
+Use Node 22, pnpm 10.12.1, PostgreSQL 16, and separate web/worker processes. Local and administrative commands use `DATABASE_URL` with a normal PostgreSQL URL. The Vercel web runtime instead uses `PRISMA_ACCELERATE_URL`; inject it and all other credentials through the platform secret manager.
 
-Run pnpm install --frozen-lockfile, pnpm db:generate, pnpm db:deploy, pnpm db:seed once, and pnpm build. Use the platform start command for the built Next.js application. Never embed credentials in scripts.
+Run pnpm install --frozen-lockfile, pnpm db:generate, pnpm db:deploy, pnpm db:seed once, and pnpm build. Database migrations and seeds remain administrative operations using `DATABASE_URL`. Set the Vercel build command to `pnpm install --frozen-lockfile && pnpm --filter @predict9ja/db exec prisma generate --no-engine && pnpm build`. Use the platform start command for the built Next.js application. Never embed credentials in scripts.
 
 For local development, pnpm dev loads the repository-root .env and starts only the web UI.
 Use pnpm dev:all only when both web and the idle worker lifecycle are deliberately required.

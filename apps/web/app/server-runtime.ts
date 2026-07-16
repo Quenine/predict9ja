@@ -11,7 +11,8 @@ export class WebRuntimeEnvironmentError extends Error {
 type RuntimeEnvironment = Readonly<Record<string, string | undefined>>;
 
 export function requireWebDatabaseEnvironment(environment: RuntimeEnvironment = process.env) {
-  if (!environment.DATABASE_URL) throw new WebRuntimeEnvironmentError("WEB_DATABASE_ENV_MISSING");
+  if (!environment.DATABASE_URL && !environment.PRISMA_ACCELERATE_URL)
+    throw new WebRuntimeEnvironmentError("WEB_DATABASE_ENV_MISSING");
 }
 
 export function requireDemoSessionSecret(environment: RuntimeEnvironment = process.env) {

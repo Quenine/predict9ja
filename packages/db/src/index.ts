@@ -1,5 +1,7 @@
 import type { FixtureStatus, SourceMode } from "@predict9ja/domain";
 import { PrismaClient } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+import { withAccelerate } from "@prisma/extension-accelerate";
 import type { FixtureSnapshotResult, NormalizedFixture } from "@predict9ja/txline";
 export * from "./scores";
 export * from "./accounts";
@@ -8,8 +10,58 @@ export * from "./resolution";
 export * from "./proofs";
 export * from "./proof-classification";
 
+export class PrismaAccelerateConfigurationError extends Error {
+  constructor() {
+    super("PRISMA_ACCELERATE_URL_INVALID");
+    this.name = "PrismaAccelerateConfigurationError";
+  }
+}
+
+type DatabaseEnvironment = Readonly<Record<string, string | undefined>>;
+type DatabaseClientOptions = Pick<Prisma.PrismaClientOptions, "datasourceUrl">;
+type DatabaseClientDependencies<T> = {
+  createClient(options?: DatabaseClientOptions): T;
+  extendAccelerate(client: T): T;
+};
+
+export function resolveAccelerateUrl(environment: DatabaseEnvironment) {
+  const configured = environment.PRISMA_ACCELERATE_URL;
+  if (configured === undefined) return undefined;
+  const value = configured.trim();
+  try {
+    const protocol = new URL(value).protocol;
+    if (protocol !== "prisma:" && protocol !== "prisma+postgres:")
+      throw new PrismaAccelerateConfigurationError();
+  } catch (error) {
+    if (error instanceof PrismaAccelerateConfigurationError) throw error;
+    throw new PrismaAccelerateConfigurationError();
+  }
+  return value;
+}
+
+export function createDatabaseClient(environment?: DatabaseEnvironment): PrismaClient;
+export function createDatabaseClient<T>(
+  environment: DatabaseEnvironment,
+  dependencies: DatabaseClientDependencies<T>,
+): T;
+export function createDatabaseClient<T = PrismaClient>(
+  environment: DatabaseEnvironment = process.env,
+  dependencies?: DatabaseClientDependencies<T>,
+) {
+  const defaults: DatabaseClientDependencies<PrismaClient> = {
+    createClient: (options) => new PrismaClient(options),
+    extendAccelerate: (client) => client.$extends(withAccelerate()) as unknown as PrismaClient,
+  };
+  const selected = dependencies ?? (defaults as DatabaseClientDependencies<T>);
+  const accelerateUrl = resolveAccelerateUrl(environment);
+  const client = selected.createClient(
+    accelerateUrl ? { datasourceUrl: accelerateUrl } : undefined,
+  );
+  return accelerateUrl ? selected.extendAccelerate(client) : client;
+}
+
 const globalDatabase = globalThis as unknown as { prisma?: PrismaClient };
-export const db = globalDatabase.prisma ?? new PrismaClient();
+export const db = globalDatabase.prisma ?? createDatabaseClient();
 if (process.env.NODE_ENV !== "production") globalDatabase.prisma = db;
 export function findFixtureWithMarkets(sourceId: string) {
   return db.fixture.findUnique({
