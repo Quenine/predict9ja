@@ -53,8 +53,11 @@ No matching real-market settlement receipt is linked.
 Node 22, pnpm workspaces, TypeScript, Next.js 15, PostgreSQL 16, Prisma, Zod, Vitest, Anchor/Solana web3, and Turbo.
 
 1. Copy .env.example to .env and replace placeholders locally.
-2. Run: pnpm install --frozen-lockfile; pnpm db:up; pnpm db:generate; pnpm db:deploy; pnpm db:seed; pnpm dev.
-3. Verify with pnpm db:test:prepare, pnpm verify:foundation, pnpm format:check, pnpm lint, pnpm typecheck, pnpm test, and pnpm build.
+2. Ensure the local file contains DEMO_SESSION_SECRET. Generate one safely with
+   node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))".
+3. Run: pnpm install --frozen-lockfile; pnpm db:up; pnpm db:generate; pnpm db:deploy; pnpm db:seed; pnpm dev.
+4. Use pnpm dev:all only when deliberately running both the web app and idle worker.
+5. Verify with pnpm db:test:prepare, pnpm verify:foundation, pnpm format:check, pnpm lint, pnpm typecheck, pnpm test, pnpm build, and pnpm check:web-runtime.
 
 See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production setup.
 

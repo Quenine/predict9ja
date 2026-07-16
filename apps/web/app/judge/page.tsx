@@ -1,35 +1,21 @@
-import { db } from "@predict9ja/db";
 import Link from "next/link";
+import { loadJudgePage } from "../page-loaders";
 import { judgeEvidenceState, selectJudgeProof } from "./evidence";
 import { StartSession } from "./start-session";
 
 export const dynamic = "force-dynamic";
-const fixtureSourceId = "18241006";
-
 export default async function Judge() {
-  const include = { scoreObservation: true, receipt: true } as const;
-  const [fixture, verifiedFinal, fallback] = await Promise.all([
-    db.fixture.findUnique({ where: { sourceId: fixtureSourceId } }),
-    db.scoreProofVerification.findFirst({
-      where: {
-        fixtureSourceId,
-        validationStatus: "VERIFIED",
-        observationClassification: "FINAL_MATCH_OBSERVATION",
-        scoreObservation: {
-          sourceMode: "LIVE",
-          action: "game_finalised",
-          finalised: true,
-        },
-      },
-      include,
-      orderBy: { verifiedAt: "desc" },
-    }),
-    db.scoreProofVerification.findFirst({
-      where: { fixtureSourceId },
-      include,
-      orderBy: { updatedAt: "desc" },
-    }),
-  ]);
+  const result = await loadJudgePage();
+  if (result.state !== "loaded")
+    return (
+      <main className="shell">
+        <h1>Judge evidence unavailable</h1>
+        <section className="card">
+          <p>Evidence data could not be loaded.</p>
+        </section>
+      </main>
+    );
+  const { fixture, verifiedFinal, fallback } = result.data;
   const proof = selectJudgeProof(verifiedFinal, fallback);
   const evidence = judgeEvidenceState(proof);
   const statKeys = Array.isArray(proof?.statKeys) ? proof.statKeys.join(", ") : "not available";

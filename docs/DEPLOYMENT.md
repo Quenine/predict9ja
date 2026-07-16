@@ -6,6 +6,12 @@ Use Node 22, pnpm 10.12.1, PostgreSQL 16, and separate web/worker processes. Inj
 
 Run pnpm install --frozen-lockfile, pnpm db:generate, pnpm db:deploy, pnpm db:seed once, and pnpm build. Use the platform start command for the built Next.js application. Never embed credentials in scripts.
 
+For local development, pnpm dev loads the repository-root .env and starts only the web UI.
+Use pnpm dev:all only when both web and the idle worker lifecycle are deliberately required.
+Existing local .env files must include DEMO_SESSION_SECRET with at least 16 characters. Generate
+one with node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))" and keep it
+outside source control.
+
 ## Populate judge evidence
 
 From a secure local operator shell connected to the remote database, run pnpm txline:sync-fixtures, pnpm txline:ingest-score-snapshot --fixture-id 18241006, then pnpm txline:verify-proof --fixture-id 18241006 --sequence 962 --stat-keys 1,2.

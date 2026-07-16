@@ -6,6 +6,7 @@ export type ResolvedValidationProvider = Readonly<{
   keypair: Keypair;
   mode: ProviderMode;
 }>;
+export const TXLINE_LOCAL_DIAGNOSTIC_GUARD = "I_UNDERSTAND_THIS_IS_READ_ONLY";
 
 export async function resolveValidationProvider(
   environment: NodeJS.ProcessEnv = process.env,
@@ -13,7 +14,7 @@ export async function resolveValidationProvider(
 ): Promise<ResolvedValidationProvider> {
   const path = environment.TXLINE_VALIDATION_WALLET_PATH;
   if (!path) return { keypair: Keypair.generate(), mode: "EPHEMERAL" };
-  if (environment.TXLINE_VALIDATION_DIAGNOSTIC !== "I_UNDERSTAND_THIS_IS_READ_ONLY")
+  if (environment.TXLINE_VALIDATION_DIAGNOSTIC !== TXLINE_LOCAL_DIAGNOSTIC_GUARD)
     throw new Error("DIAGNOSTIC_WALLET_GUARD_REQUIRED");
   const raw: unknown = JSON.parse(await read(path, "utf8"));
   if (

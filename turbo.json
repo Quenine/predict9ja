@@ -1,5 +1,22 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "TXLINE_NETWORK",
+    "TXLINE_REQUEST_TIMEOUT_MS",
+    "SOLANA_RPC_URL",
+    "SOLANA_COMMITMENT",
+    "SOLANA_VALIDATION_TIMEOUT_MS",
+    "SOURCE_MODE",
+    "LOG_LEVEL"
+  ],
+  "globalPassThroughEnv": [
+    "DATABASE_URL",
+    "DATABASE_TEST_URL",
+    "DEMO_SESSION_SECRET",
+    "TXLINE_API_TOKEN",
+    "TXLINE_VALIDATION_WALLET_PATH",
+    "TXLINE_VALIDATION_DIAGNOSTIC"
+  ],
   "tasks": {
     "dev": { "cache": false, "persistent": true },
     "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**", "!.next/cache/**"] },

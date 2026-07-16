@@ -11,10 +11,18 @@ export interface WorkerRunner {
 }
 
 const runner: WorkerRunner = {
-  run: async (signal) =>
-    new Promise<void>((resolve) =>
-      signal.addEventListener("abort", () => resolve(), { once: true }),
-    ),
+  run: (signal) =>
+    new Promise<void>((resolve) => {
+      const interval = setInterval(() => undefined, 30_000);
+      signal.addEventListener(
+        "abort",
+        () => {
+          clearInterval(interval);
+          resolve();
+        },
+        { once: true },
+      );
+    }),
 };
 
 const config = environmentSchema.parse(process.env);

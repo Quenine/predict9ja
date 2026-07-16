@@ -1,10 +1,18 @@
-import { getAccountPortfolio } from "@predict9ja/db";
 import Link from "next/link";
-import { currentDemoAccount } from "../session-context";
+import { loadPortfolioPage } from "../page-loaders";
 export const dynamic = "force-dynamic";
 export default async function Portfolio() {
-  const account = await currentDemoAccount();
-  const portfolio = account ? await getAccountPortfolio(account.id) : null;
+  const result = await loadPortfolioPage();
+  const portfolio = result.state === "loaded" ? result.data : null;
+  if (result.state === "failed")
+    return (
+      <main className="shell">
+        <h1>Your positions</h1>
+        <section className="card">
+          <p>Portfolio data could not be loaded.</p>
+        </section>
+      </main>
+    );
   const committed =
     portfolio?.positions.reduce((sum, position) => sum + position.stakeCredits, 0) ?? 0;
   const payouts =

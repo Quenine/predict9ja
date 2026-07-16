@@ -1,11 +1,21 @@
-import { getReceipt } from "@predict9ja/db";
 import { notFound } from "next/navigation";
+import { loadReceiptPage } from "../../page-loaders";
 import { PROOF_LABELS } from "../../proof-labels";
 export const dynamic = "force-dynamic";
 export default async function Proof({ params }: { params: Promise<{ receiptId: string }> }) {
   const { receiptId } = await params;
-  const receipt = await getReceipt(receiptId);
-  if (!receipt) notFound();
+  const result = await loadReceiptPage(receiptId);
+  if (result.state === "not_found") notFound();
+  if (result.state !== "loaded")
+    return (
+      <main className="shell">
+        <h1>Receipt unavailable</h1>
+        <section className="card">
+          <p>Receipt data could not be loaded.</p>
+        </section>
+      </main>
+    );
+  const receipt = result.data!;
   const proof = receipt.proofVerification;
   const statKeys = proof?.statKeys as number[] | undefined;
   const statValues = proof?.statValues as number[] | undefined;

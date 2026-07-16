@@ -1,7 +1,6 @@
-import { listFixtureMarkets } from "@predict9ja/db";
 import { displayedScore, displayedTeams } from "@predict9ja/domain";
 import { notFound } from "next/navigation";
-import { currentDemoAccount } from "../../session-context";
+import { loadFixturePage } from "../../page-loaders";
 import { MarketBoard } from "./market-board";
 export const dynamic = "force-dynamic";
 export default async function FixtureDetails({
@@ -10,11 +9,19 @@ export default async function FixtureDetails({
   params: Promise<{ fixtureId: string }>;
 }) {
   const { fixtureId } = await params;
-  const [fixture, account] = await Promise.all([
-    listFixtureMarkets(decodeURIComponent(fixtureId)),
-    currentDemoAccount(),
-  ]);
-  if (!fixture) notFound();
+  const result = await loadFixturePage(decodeURIComponent(fixtureId));
+  if (result.state === "not_found") notFound();
+  if (result.state !== "loaded")
+    return (
+      <main className="shell">
+        <h1>Fixture unavailable</h1>
+        <section className="card">
+          <p>Fixture data could not be loaded.</p>
+        </section>
+      </main>
+    );
+  const { fixture: loadedFixture, account } = result.data;
+  const fixture = loadedFixture!;
   const teams = displayedTeams(fixture);
   const projection = fixture.scoreProjection;
   const score = displayedScore(

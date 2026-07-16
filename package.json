@@ -6,8 +6,10 @@
     "node": "\u003e=22 \u003c23"
   },
   "scripts": {
-    "dev": "turbo dev",
+    "dev": "node scripts/with-root-env.mjs pnpm --filter @predict9ja/web dev",
+    "dev:all": "node scripts/with-root-env.mjs pnpm exec turbo dev",
     "build": "turbo build",
+    "check:web-runtime": "node scripts/check-web-runtime.mjs",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "pnpm test:unit && pnpm test:integration",

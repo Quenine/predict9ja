@@ -18,7 +18,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:deploy": "prisma migrate deploy",
-    "verify:foundation": "tsx prisma/verify-foundation.ts"
+    "verify:foundation": "tsx prisma/verify-foundation.ts",
+    "smoke:prepare": "tsx prisma/prepare-runtime-smoke.ts"
   },
   "dependencies": {
     "@predict9ja/domain": "workspace:*",
