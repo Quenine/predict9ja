@@ -54,9 +54,10 @@ describe("fan-first information architecture", () => {
   });
   it("keeps provider and value claims honest", () => {
     const docs = read("../../README.md");
+
     expect(docs).toContain("TxLINE odds are not currently consumed");
-    expect(docs).toContain("not a live SSE connection");
+    expect(docs).toContain("The featured replay is historical");
     expect(docs).toContain("not continuously hosted");
-    expect(docs).toContain("no wallet, custody or real-value transaction");
+    expect(docs).toContain("There is no custody, escrow or real-value settlement");
   });
 });

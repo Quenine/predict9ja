@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
-describe("submission-ready public product", () => {
+describe("production-ready public product", () => {
   it("excludes Admin from public navigation and exposes active state metadata", () => {
     const source = read("app/public-nav.tsx");
     expect(source).not.toContain("Admin");
@@ -35,13 +35,18 @@ describe("submission-ready public product", () => {
     expect(source).toContain("System diagnostics");
     expect(source).toContain("index: false");
   });
-  it("documents deployment, exact walkthrough and implemented endpoints", () => {
+  it("documents deployment, demo, architecture and implemented endpoints", () => {
     const source = read("../../README.md");
+
     expect(source).toContain("https://predict9ja-web.vercel.app");
-    expect(source).toContain("Exact 90-second judge walkthrough");
+    expect(source).toContain("https://youtu.be/6WjMjt-Paz8");
+    expect(source).toContain("docs/architecture.md");
+    expect(source).toContain("docs/txline-integration.md");
     expect(source).toContain("/api/fixtures/snapshot");
     expect(source).toContain("/api/scores/stat-validation");
-    expect(source).not.toContain("Continue to **Synthetic");
+
+    expect(source).not.toContain("Exact 90-second judge walkthrough");
+    expect(source).not.toContain("submission demo video URL");
   });
   it("does not make misleading market or money claims", () => {
     const publicCopy = [
