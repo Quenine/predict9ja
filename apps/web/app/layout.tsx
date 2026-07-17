@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const links = [
   ["/arena", "Arena"],
   ["/portfolio", "Portfolio"],
-  ["/judge", "Judge"],
+  ["/judge", "Verified replay"],
   ["/admin", "Admin"],
 ] as const;
 

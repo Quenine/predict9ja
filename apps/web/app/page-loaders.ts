@@ -30,6 +30,7 @@ async function databaseLoad<T>(load: () => Promise<T>): Promise<PageLoadResult<T
 }
 
 export const loadArenaPage = () => databaseLoad(() => getFixtureCatalogue());
+export const loadHomePage = () => databaseLoad(() => getFixtureCatalogue());
 export const loadAdminPage = () =>
   databaseLoad(async () => {
     await db.$queryRawUnsafe("SELECT 1");

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   currentDemoAccount: vi.fn(),
   getJudgeDemoState: vi.fn(),
+  getFixtureCatalogue: vi.fn(),
   fixture: vi.fn(),
 }));
 
@@ -19,15 +20,21 @@ vi.mock("@predict9ja/db", () => ({
     },
   },
   getJudgeDemoState: mocks.getJudgeDemoState,
+  getFixtureCatalogue: mocks.getFixtureCatalogue,
 }));
 
-import { loadJudgePage } from "./page-loaders";
+import { loadHomePage, loadJudgePage } from "./page-loaders";
 
 describe("loadJudgePage", () => {
   beforeEach(() => {
     process.env.DATABASE_URL = "configured";
     mocks.fixture.mockResolvedValue({ sourceId: "18241006" });
     mocks.getJudgeDemoState.mockReset();
+  });
+
+  it("returns a safe failed homepage summary state", async () => {
+    mocks.getFixtureCatalogue.mockRejectedValueOnce(new Error("database unavailable"));
+    await expect(loadHomePage()).resolves.toMatchObject({ state: "failed" });
   });
 
   it("returns real evidence and isolated synthetic demo state together", async () => {

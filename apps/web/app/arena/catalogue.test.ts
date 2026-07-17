@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   filterCatalogue,
+  fixtureMarketState,
   fixtureProofState,
-  fixtureReplayReady,
+  formatCatalogueDate,
+  ordinaryCatalogue,
+  sortCatalogue,
   type CatalogueFixture,
 } from "./catalogue";
 
@@ -12,6 +15,8 @@ const fixture = (overrides: Partial<CatalogueFixture> = {}): CatalogueFixture =>
   homeTeam: "England",
   awayTeam: "Argentina",
   status: "FINISHED",
+  startsAt: new Date("2026-11-15T09:00:00Z"),
+  markets: [],
   scoreProjection: { finalised: true, latestPhase: "UNKNOWN" },
   proofVerifications: [
     {
@@ -25,36 +30,129 @@ const fixture = (overrides: Partial<CatalogueFixture> = {}): CatalogueFixture =>
   ...overrides,
 });
 
-describe("fixture catalogue", () => {
-  it("filters every canonical fixture without an arbitrary fixed limit", () => {
-    const values = Array.from({ length: 30 }, (_, index) => fixture({ sourceId: String(index) }));
-    expect(filterCatalogue(values, "all", "")).toHaveLength(30);
+describe("fixture catalogue presentation", () => {
+  it("uses contextual proof labels", () => {
+    expect(fixtureProofState(fixture())).toBe("Proof verified");
+    expect(
+      fixtureProofState(
+        fixture({
+          proofVerifications: [
+            {
+              fetchStatus: "FETCHED",
+              validationStatus: "PENDING",
+              observationClassification: "UNKNOWN",
+              providerSequence: 1,
+            },
+          ],
+        }),
+      ),
+    ).toBe("Proof fetched");
+    expect(
+      fixtureProofState(
+        fixture({ status: "SCHEDULED", scoreProjection: null, proofVerifications: [] }),
+      ),
+    ).toBe("Proof after final data");
+    expect(
+      fixtureProofState(fixture({ status: "LIVE", scoreProjection: null, proofVerifications: [] })),
+    ).toBe("Proof pending");
+    expect(fixtureProofState(fixture({ proofVerifications: [] }))).toBe("Proof unavailable");
   });
-  it("filters lifecycle, verified proof and replay-ready states", () => {
+  it("uses honest contextual market labels", () => {
+    expect(fixtureMarketState(fixture())).toBe("Verified replay available");
+    expect(
+      fixtureMarketState(
+        fixture({
+          sourceId: "active",
+          markets: [{ status: "OPEN" }],
+          proofVerifications: [],
+          scoreObservations: [],
+        }),
+      ),
+    ).toBe("Application markets: open");
+    expect(
+      fixtureMarketState(
+        fixture({
+          sourceId: "upcoming",
+          status: "SCHEDULED",
+          scoreProjection: null,
+          proofVerifications: [],
+          scoreObservations: [],
+        }),
+      ),
+    ).toBe("Fixture data only");
+    expect(
+      fixtureMarketState(
+        fixture({
+          sourceId: "live",
+          status: "LIVE",
+          scoreProjection: null,
+          proofVerifications: [],
+          scoreObservations: [],
+        }),
+      ),
+    ).toBe("Live market unavailable");
+    expect(
+      fixtureMarketState(
+        fixture({ sourceId: "finished", proofVerifications: [], scoreObservations: [] }),
+      ),
+    ).toBe("No application market");
+    expect(fixtureMarketState(fixture({ sourceMode: "SYNTHETIC" }))).toBe("Fictional demo markets");
+  });
+  it("excludes the featured replay and retains all other canonical fixtures", () => {
+    expect(
+      ordinaryCatalogue([fixture(), fixture({ sourceId: "ordinary" })]).map(
+        (item) => item.sourceId,
+      ),
+    ).toEqual(["ordinary"]);
+  });
+  it("sorts live, nearest upcoming, newest finished, then other states", () => {
     const values = [
-      fixture(),
+      fixture({ sourceId: "unknown", status: "UNKNOWN", scoreProjection: null }),
       fixture({
-        sourceId: "upcoming",
+        sourceId: "old-finished",
+        startsAt: new Date("2025-01-01"),
+        scoreObservations: [],
+      }),
+      fixture({
+        sourceId: "later",
         status: "SCHEDULED",
+        startsAt: new Date("2027-02-01"),
         scoreProjection: null,
-        proofVerifications: [],
+      }),
+      fixture({ sourceId: "live", status: "LIVE", scoreProjection: null }),
+      fixture({
+        sourceId: "near",
+        status: "SCHEDULED",
+        startsAt: new Date("2027-01-01"),
+        scoreProjection: null,
+      }),
+      fixture({
+        sourceId: "new-finished",
+        startsAt: new Date("2026-01-01"),
         scoreObservations: [],
       }),
     ];
-    expect(filterCatalogue(values, "upcoming", "").map((value) => value.sourceId)).toEqual([
-      "upcoming",
+    expect(sortCatalogue(values).map((item) => item.sourceId)).toEqual([
+      "live",
+      "near",
+      "later",
+      "new-finished",
+      "old-finished",
+      "unknown",
     ]);
-    expect(filterCatalogue(values, "finished", "")).toHaveLength(1);
-    expect(filterCatalogue(values, "verified", "")).toHaveLength(1);
-    expect(filterCatalogue(values, "replay", "")).toHaveLength(1);
   });
-  it("searches both team names case-insensitively", () => {
-    expect(filterCatalogue([fixture()], "all", "argENT")).toHaveLength(1);
-    expect(filterCatalogue([fixture()], "all", "brazil")).toHaveLength(0);
+  it("formats compact Africa/Lagos dates without seconds", () => {
+    expect(formatCatalogueDate(new Date("2026-11-15T09:00:45Z"))).toBe("15 Nov 2026 · 10:00 WAT");
   });
-  it("derives safe proof and replay badges", () => {
-    expect(fixtureProofState(fixture())).toBe("Verified");
-    expect(fixtureReplayReady(fixture())).toBe(true);
-    expect(fixtureProofState(fixture({ proofVerifications: [] }))).toBe("No proof yet");
+  it("filters without a fixed limit and keeps isolated replay fixtures out of catalogue input", () => {
+    const canonical = Array.from({ length: 30 }, (_, index) =>
+      fixture({ sourceId: String(index) }),
+    );
+    expect(filterCatalogue(canonical, "all", "")).toHaveLength(30);
+    expect(
+      ordinaryCatalogue([
+        fixture({ sourceId: "judge-replay:18241006:user", sourceMode: "REPLAY" }),
+      ]),
+    ).toHaveLength(0);
   });
 });
