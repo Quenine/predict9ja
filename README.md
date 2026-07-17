@@ -10,7 +10,7 @@
 ![TxLINE](https://img.shields.io/badge/TxLINE-devnet-111827)
 ![Demo credits](https://img.shields.io/badge/economy-demo%20credits%20only-0F766E)
 
-[Live application](https://predict9ja-web.vercel.app) · [Demo video](https://youtu.be/6WjMjt-Paz8) · [Architecture](docs/architecture.md) · [TxLINE integration](docs/txline-integration.md) · [Operations](docs/operations.md)
+[Live application](https://predict9ja-web.vercel.app) · [Demo video](https://youtu.be/6WjMjt-Paz8) · [Architecture](docs/architecture.md) · [TxLINE integration](docs/txline-integration.md) · [TxLINE API feedback](docs/txline-feedback.md) · [Operations](docs/operations.md)
 
 [![Watch the Predict9ja demo](https://img.youtube.com/vi/6WjMjt-Paz8/maxresdefault.jpg)](https://youtu.be/6WjMjt-Paz8)
 
@@ -43,6 +43,24 @@ Predict9ja makes that path inspectable.
 
 > Application quotes are fictional demonstration prices and are not TxLINE consensus odds.
 
+## Business and technical highlights
+
+### Business highlights
+
+Predict9ja demonstrates a reusable foundation for white-label prediction experiences, sponsored fan campaigns, community leagues, developer-facing settlement APIs and audit tooling for sports-data products. The current build deliberately limits itself to fictional credits while proving the product mechanics, evidence model and partner-facing architecture.
+
+### Technical highlights
+
+- Provider-sequence-aware ingestion and historical replay.
+- Explicit finalisation authority rather than newest-record assumptions.
+- Versioned, framework-independent market rules.
+- Integer-only balances with an append-only ledger.
+- Idempotent purchases, payouts and refunds.
+- Canonical receipt digests and bounded proof persistence.
+- Server-only TxLINE credentials and in-memory guest JWTs.
+- Read-only Solana verification of exact score predicates.
+- Scheduled fixture synchronization with checkpointed SSE support available to a continuously running worker.
+
 ## Architecture
 
 ```mermaid
@@ -50,14 +68,18 @@ flowchart LR
     User[Fan or analyst] --> Web[Next.js web application]
     Web --> Services[Prediction and replay services]
     Services --> DB[(PostgreSQL via Prisma Accelerate)]
-    Sync[Scheduled fixture synchronizer] --> TxLINE[TxLINE API]
-    TxLINE --> Sync
-    Sync --> DB
-    Worker[Operator worker] --> TxLINE
+
+    Workflow[GitHub Actions fixture sync] --> Worker[Operator worker]
+    Worker --> TxLINE[TxLINE API]
+    TxLINE --> Worker
     Worker --> DB
-    Worker --> Validation[TxLINE Solana validation program]
+    Worker --> Verification[Proof verification package]
+    Verification --> Solana[TxLINE Solana devnet program]
+
     DB --> Web
 ```
+
+This is the deployment and data-flow view. The detailed [component map](docs/architecture.md#component-map) expands the same system into its monorepo packages and internal dependency boundaries; the diagrams intentionally use different levels of abstraction rather than representing different architectures.
 
 The web application presents fixtures, replay controls, predictions and receipts. Worker commands own provider ingestion, historical imports, proof retrieval, verification and operator workflows. Framework-independent market rules live in the domain package, while PostgreSQL is the application system of record.
 
@@ -93,6 +115,18 @@ For the featured replay, sequence `962` is authoritative because it is the expli
 
 SSE support is implemented but is not continuously hosted on Vercel. Historical replay uses observations already stored by the application. Provider credentials remain server-side. TxLINE odds are not currently consumed.
 
+## TxLINE API feedback
+
+### What worked well
+
+TxLINE's stable fixture identity, participant orientation, ordered score observations, historical access and stat-validation proof material made deterministic persistence, replay and source verification practical.
+
+### Where we encountered friction
+
+The integration required careful handling of bounded historical availability, legitimate `UNKNOWN` phases, and later non-final observations that can follow an explicit `game_finalised` record. SSE ingestion also requires a continuously running worker rather than a request-driven Vercel deployment.
+
+The complete experience report and improvement suggestions are documented in [TxLINE API feedback](docs/txline-feedback.md).
+
 ## Integrity model
 
 1. TxLINE supplies fixture identity, participant orientation, ordered score observations and proof material.
@@ -116,7 +150,7 @@ Next.js, React, TypeScript, Node.js 22, Turborepo, pnpm, PostgreSQL, Prisma, Pri
 | `packages/txline`       | TxLINE transport, authentication and normalization      |
 | `packages/verification` | Proof normalization, digests and Solana validation      |
 | `packages/db`           | Prisma models, persistence, settlement and receipts     |
-| `docs`                  | Architecture, integration and operations documentation  |
+| `docs`                  | Architecture, integration, feedback and operations docs |
 | `scripts`               | Development, integration-test and runtime-smoke tooling |
 
 ## Getting started
@@ -188,6 +222,7 @@ The public web application is deployed on Vercel. Runtime database traffic uses 
 
 - [Architecture](docs/architecture.md)
 - [TxLINE integration](docs/txline-integration.md)
+- [TxLINE API feedback](docs/txline-feedback.md)
 - [Operations](docs/operations.md)
 
 ## Acknowledgements
