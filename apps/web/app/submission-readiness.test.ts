@@ -19,7 +19,7 @@ describe("submission-ready public product", () => {
   it("keeps fixture identity and authority inside a technical disclosure", () => {
     const source = read("app/arena/[fixtureId]/page.tsx");
     expect(source).toContain("Technical source details");
-    expect(source).toContain("Sequence {item.providerSequence}");
+    expect(source).toContain("sequence {item.providerSequence}");
     expect(source).toContain("authoritative final evidence");
     expect(source).toContain("later non-authoritative observation");
   });

@@ -4,6 +4,7 @@ import { calculatePosition } from "@predict9ja/domain";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { observationPresentation, providerActionPresentation } from "../presentation";
 
 export type JudgeDemoView = Readonly<{
   mode: "REPLAY" | "SYNTHETIC";
@@ -12,6 +13,7 @@ export type JudgeDemoView = Readonly<{
   fixture: Readonly<{
     homeTeam: string;
     awayTeam: string;
+    participant1IsHome: boolean;
     finalised: boolean;
     action: string | null;
     homeScore: number | null;
@@ -134,17 +136,17 @@ export function JudgeDemo({
 
   async function simulate() {
     setPending("simulation");
-    setMessage("Applying the stored match observations and settlement rules…");
+    setMessage("Replaying stored match updates and checking the result…");
     try {
       const response = await fetch("/api/demo/simulate", { method: "POST" });
       setMessage(
         response.ok
-          ? "Simulation complete. The finalised result and receipt are ready."
-          : "The simulation could not be completed safely.",
+          ? "Replay complete. The final result and receipt are ready."
+          : "The replay could not be completed safely.",
       );
       if (response.ok) router.refresh();
     } catch {
-      setMessage("The simulation could not be completed safely.");
+      setMessage("The replay could not be completed safely.");
     } finally {
       setPending(null);
     }
@@ -219,7 +221,7 @@ export function JudgeDemo({
                 {demo.fixture.homeTeam} vs {demo.fixture.awayTeam} ·{" "}
                 {demo.mode === "REPLAY"
                   ? `canonical TxLINE source ${demo.canonicalSourceId}`
-                  : "fictional fixture"}{" "}
+                  : "fictional match"}{" "}
                 · fictional demo credits only
               </p>
             </div>
@@ -294,8 +296,8 @@ export function JudgeDemo({
               <span className="step-number">3</span>
               <h3>Replay the match</h3>
               <p>
-                Applies stored observations chronologically through game_finalised, then resolves
-                and settles once without artificial delay.
+                Replays stored match updates chronologically through full time, then checks the
+                result once without artificial delay.
               </p>
             </div>
             <button
@@ -306,29 +308,38 @@ export function JudgeDemo({
               {pending === "simulation"
                 ? "Running…"
                 : demo.fixture.finalised
-                  ? "Simulation complete"
+                  ? "Replay complete"
                   : "Replay match updates"}
             </button>
           </article>
 
           <article className="demo-step">
-            <h3>
-              {demo.mode === "REPLAY" ? "Stored TxLINE event timeline" : "Synthetic event timeline"}
-            </h3>
+            <h3>{demo.mode === "REPLAY" ? "Match replay timeline" : "Demo replay timeline"}</h3>
             <div className="replay-timeline">
-              {demo.timeline.map((event) => (
-                <div className={event.finalised ? "authoritative" : ""} key={event.sequence}>
-                  <strong>#{event.sequence}</strong>
-                  <span>{event.phase.replaceAll("_", " ").toLowerCase()}</span>
-                  <span>
-                    P1 {event.participant1Goals ?? "–"} · P2 {event.participant2Goals ?? "–"}
-                  </span>
-                  <small>
-                    {event.action}
-                    {event.finalised ? " · authoritative final" : ""}
-                  </small>
-                </div>
-              ))}
+              {demo.timeline.map((item) => {
+                const event = observationPresentation({
+                  homeTeam: demo.fixture.homeTeam,
+                  awayTeam: demo.fixture.awayTeam,
+                  participant1IsHome: demo.fixture.participant1IsHome,
+                  participant1Goals: item.participant1Goals,
+                  participant2Goals: item.participant2Goals,
+                  phase: item.phase,
+                  action: item.action,
+                  finalised: item.finalised,
+                  authoritative: item.finalised,
+                  sequence: item.sequence,
+                });
+                return (
+                  <div className={item.finalised ? "authoritative" : ""} key={item.sequence}>
+                    <strong>Update #{item.sequence}</strong>
+                    <span>{event.score}</span>
+                    <small>
+                      {event.fanLabel}
+                      {event.authorityLabel ? ` · ${event.authorityLabel}` : ""}
+                    </small>
+                  </div>
+                );
+              })}
             </div>
           </article>
 
@@ -340,7 +351,7 @@ export function JudgeDemo({
                 {demo.fixture.awayTeam}
               </h3>
               <p>
-                <strong>{demo.fixture.action}</strong> · winning outcome{" "}
+                <strong>{providerActionPresentation(demo.fixture.action)}</strong> · winning outcome{" "}
                 {demo.position.winningOutcome}
               </p>
               <dl>
@@ -404,13 +415,26 @@ export function JudgeDemo({
                 </p>
                 <ol>
                   <li>Replay started</li>
-                  {demo.timeline.map((event) => (
-                    <li key={event.sequence}>
-                      Stored update #{event.sequence}: {event.participant1Goals ?? "–"}–
-                      {event.participant2Goals ?? "–"}
-                      {event.finalised ? " · final whistle" : ""}
-                    </li>
-                  ))}
+                  {demo.timeline.map((item) => {
+                    const event = observationPresentation({
+                      homeTeam: demo.fixture.homeTeam,
+                      awayTeam: demo.fixture.awayTeam,
+                      participant1IsHome: demo.fixture.participant1IsHome,
+                      participant1Goals: item.participant1Goals,
+                      participant2Goals: item.participant2Goals,
+                      phase: item.phase,
+                      action: item.action,
+                      finalised: item.finalised,
+                      authoritative: item.finalised,
+                      sequence: item.sequence,
+                    });
+                    return (
+                      <li key={item.sequence}>
+                        Update #{item.sequence}: {event.score} · {event.fanLabel}
+                        {event.authorityLabel ? ` · ${event.authorityLabel}` : ""}
+                      </li>
+                    );
+                  })}
                   <li>Rules evaluated</li>
                   <li>Demo-credit result settled</li>
                   <li>Source evidence verified</li>

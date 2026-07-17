@@ -51,7 +51,7 @@ describe("fixture catalogue presentation", () => {
       fixtureProofState(
         fixture({ status: "SCHEDULED", scoreProjection: null, proofVerifications: [] }),
       ),
-    ).toBe("Verification after full time");
+    ).toBe("Verification not available yet");
     expect(
       fixtureProofState(fixture({ status: "LIVE", scoreProjection: null, proofVerifications: [] })),
     ).toBe("Verification pending");
@@ -79,7 +79,7 @@ describe("fixture catalogue presentation", () => {
           scoreObservations: [],
         }),
       ),
-    ).toBe("Match tracking available");
+    ).toBe("Tracking starts at kickoff");
     expect(
       fixtureMarketState(
         fixture({

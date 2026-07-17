@@ -25,9 +25,9 @@ const filters: readonly [CatalogueFilter, string][] = [
   ["all", "All"],
   ["upcoming", "Upcoming"],
   ["live", "Live"],
-  ["finished", "Finished"],
+  ["finished", "Final"],
   ["verified", "Result verified"],
-  ["replay", "Replay available"],
+  ["replay", "Replay & Predict"],
 ];
 
 export default async function Arena({
@@ -39,9 +39,9 @@ export default async function Arena({
   if (result.state !== "loaded")
     return (
       <main className="shell">
-        <h1>Arena unavailable</h1>
+        <h1>Matches unavailable</h1>
         <section className="card">
-          <p>Fixture data could not be loaded safely. Please try again shortly.</p>
+          <p>Match data could not be loaded safely. Please try again shortly.</p>
         </section>
       </main>
     );
@@ -63,7 +63,7 @@ export default async function Arena({
     ["TxLINE matches", canonical.length],
     ["Upcoming", canonical.filter((fixture) => fixtureLifecycle(fixture) === "upcoming").length],
     ["Live now", canonical.filter((fixture) => fixtureLifecycle(fixture) === "live").length],
-    ["Finished", canonical.filter((fixture) => fixtureLifecycle(fixture) === "finished").length],
+    ["Final", canonical.filter((fixture) => fixtureLifecycle(fixture) === "finished").length],
     [
       "Result verified",
       canonical.filter((fixture) => fixtureProofState(fixture) === "Result verified").length,
@@ -75,7 +75,7 @@ export default async function Arena({
       <div className="eyebrow">Matches</div>
       <h1>Follow the matches. Replay the verified result.</h1>
       <p className="lead">
-        Browse fixtures currently available through TxLINE devnet and explore the verified
+        Browse matches currently available through TxLINE devnet and explore the verified
         England–Argentina replay.
       </p>
 
@@ -93,7 +93,7 @@ export default async function Arena({
               <span className="pill">Final</span>
               <span className="pill">Result verified</span>
               <span className="pill">Solana devnet</span>
-              <span className="pill">Replay available</span>
+              <span className="pill">Replay & predict</span>
             </div>
           </div>
           <div className="actions">
@@ -162,42 +162,55 @@ export default async function Arena({
         <p>
           {filtered.length} result{filtered.length === 1 ? "" : "s"}
         </p>
-        <div className="grid">
-          {visible.map((fixture) => {
-            const score = displayedScore(
-              fixture.participant1IsHome,
-              fixture.scoreProjection?.participant1Goals ?? null,
-              fixture.scoreProjection?.participant2Goals ?? null,
-            );
-            return (
-              <article className="card fixture-card" key={fixture.id}>
-                <div className="fixture-badges">
-                  <span className="pill">{fixtureLifecycleLabel(fixture)}</span>
-                  <span className="pill">{fixtureProofState(fixture)}</span>
-                </div>
-                <p className="meta">TxLINE match {fixture.sourceId}</p>
-                <h3>
-                  <Link href={`/arena/${encodeURIComponent(fixture.sourceId)}`}>
-                    {fixture.homeTeam} vs {fixture.awayTeam}
+        {!visible.length ? (
+          <section className="card empty-state">
+            <h3>No matches found</h3>
+            <p>Try another team name or clear the current filter.</p>
+            <Link className="button inline-button" href="/arena">
+              Show all matches
+            </Link>
+          </section>
+        ) : (
+          <div className="grid">
+            {visible.map((fixture) => {
+              const score = displayedScore(
+                fixture.participant1IsHome,
+                fixture.scoreProjection?.participant1Goals ?? null,
+                fixture.scoreProjection?.participant2Goals ?? null,
+              );
+              return (
+                <article className="card fixture-card" key={fixture.id}>
+                  <div className="fixture-badges">
+                    <span className="pill">{fixtureLifecycleLabel(fixture)}</span>
+                    <span className="pill">{fixtureProofState(fixture)}</span>
+                  </div>
+                  <p className="meta">TxLINE match {fixture.sourceId}</p>
+                  <h3>
+                    <Link href={`/arena/${encodeURIComponent(fixture.sourceId)}`}>
+                      {fixture.homeTeam} vs {fixture.awayTeam}
+                    </Link>
+                  </h3>
+                  {fixture.scoreProjection && (
+                    <p className="score">
+                      {score.homeScore ?? "–"}–{score.awayScore ?? "–"}
+                    </p>
+                  )}
+                  <p className="meta">Kickoff {formatCatalogueDate(fixture.startsAt)}</p>
+                  <p>{fixtureMarketState(fixture)}</p>
+                  {fixture.status === "SCHEDULED" && !fixture.scoreObservations.length && (
+                    <p className="meta">Predictions unavailable</p>
+                  )}
+                  <Link
+                    className="button inline-button"
+                    href={`/arena/${encodeURIComponent(fixture.sourceId)}`}
+                  >
+                    View match
                   </Link>
-                </h3>
-                {fixture.scoreProjection && (
-                  <p className="score">
-                    {score.homeScore ?? "–"}–{score.awayScore ?? "–"}
-                  </p>
-                )}
-                <p className="meta">Kickoff {formatCatalogueDate(fixture.startsAt)}</p>
-                <p>{fixtureMarketState(fixture)}</p>
-                <Link
-                  className="button inline-button"
-                  href={`/arena/${encodeURIComponent(fixture.sourceId)}`}
-                >
-                  View match
-                </Link>
-              </article>
-            );
-          })}
-        </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
         {pages > 1 && (
           <div className="pagination">
             {page > 1 && (

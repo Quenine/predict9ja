@@ -34,7 +34,7 @@ export default async function Home() {
         <h1>Predict the match. Replay the action. Verify the result.</h1>
         <p className="lead">
           Explore tournament matches, make picks with demo credits, replay real TxLINE match updates
-          and see exactly how every result was settled.
+          and see exactly how your demo result was settled.
         </p>
         <div className="actions">
           <Link className="button primary" href="/judge?mode=replay">
@@ -50,7 +50,7 @@ export default async function Home() {
         <div className="grid">
           <article className="card">
             <h3>Follow the match</h3>
-            <p>Browse the fixtures currently available through TxLINE devnet.</p>
+            <p>Browse the matches currently available through TxLINE devnet.</p>
           </article>
           <article className="card">
             <h3>Make your pick</h3>
@@ -63,7 +63,7 @@ export default async function Home() {
         </div>
       </section>
       <section aria-labelledby="product-proof-title">
-        <h2 id="product-proof-title">Live product proof</h2>
+        <h2 id="product-proof-title">Predict9ja at a glance</h2>
         <div className="catalogue-summary home-summary">
           {metrics.map(([label, value]) => (
             <div key={label}>

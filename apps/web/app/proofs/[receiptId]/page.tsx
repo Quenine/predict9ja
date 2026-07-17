@@ -37,6 +37,12 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       : (context.position?.actualPayoutCredits ?? 0) > 0
         ? "won"
         : "lost";
+  const resultStatus =
+    receipt.settlementStatus === "VOID"
+      ? "Refunded"
+      : receipt.settlementStatus === "SETTLED"
+        ? "Completed"
+        : receipt.settlementStatus.replaceAll("_", " ").toLowerCase();
   return (
     <main className="shell receipt-page">
       <div className="eyebrow">Application settlement receipt</div>
@@ -56,32 +62,34 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       </p>
       <h2>How the result was decided</h2>
       <ol className="provenance-chain" aria-label="Settlement provenance">
-        <li>Prediction</li>
+        <li>Pick placed</li>
         <li>
-          {context.receiptContext === "SYNTHETIC_DEMO" ? "Synthetic events" : "TxLINE observations"}
+          {context.receiptContext === "SYNTHETIC_DEMO"
+            ? "Demo events generated"
+            : "Match updates received"}
         </li>
-        <li>Finalisation</li>
-        <li>Deterministic rules</li>
-        <li>Settlement</li>
-        <li>Application receipt</li>
+        <li>Full time confirmed</li>
+        <li>Rules checked</li>
+        <li>Demo credits settled</li>
+        <li>Receipt created</li>
       </ol>
       <section className="card observations">
         <h2>Prediction settlement</h2>
         <dl>
-          <dt>Market</dt>
+          <dt>Prediction</dt>
           <dd>{receipt.market.title}</dd>
           <dt>Selected outcome</dt>
           <dd>{context.position?.outcome.label ?? "Not available"}</dd>
           <dt>Demo-credit stake</dt>
           <dd>{context.position?.stakeCredits.toLocaleString() ?? "0"} credits</dd>
-          <dt>Demo-credit return</dt>
+          <dt>Demo return</dt>
           <dd>{(context.position?.actualPayoutCredits ?? 0).toLocaleString()} credits</dd>
           <dt>Final score</dt>
           <dd>
             {receipt.homeScore ?? "–"}–{receipt.awayScore ?? "–"}
           </dd>
-          <dt>Settlement status</dt>
-          <dd>{receipt.settlementStatus.toLowerCase()}</dd>
+          <dt>Result status</dt>
+          <dd>{resultStatus}</dd>
           <dt>Rules used</dt>
           <dd>{receipt.ruleVersion}</dd>
           <dt>Receipt integrity</dt>

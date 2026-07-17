@@ -12,6 +12,11 @@ import {
 } from "../catalogue";
 import { loadFixturePage } from "../../page-loaders";
 import { MarketBoard } from "./market-board";
+import {
+  hasDisplayScore,
+  observationPresentation,
+  providerPhasePresentation,
+} from "../../presentation";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -47,6 +52,7 @@ export default async function FixtureDetails({
     projection?.participant2Goals ?? null,
   );
   const replayAvailable = fixtureReplayReady(fixture);
+  const hasScore = hasDisplayScore(projection?.participant1Goals, projection?.participant2Goals);
   const fanObservations = fixture.scoreObservations.filter((item) => item.providerSequence <= 962);
   return (
     <main className="shell fixture-detail">
@@ -65,22 +71,42 @@ export default async function FixtureDetails({
       </div>
       <section className="match-hero card">
         <div>
-          <h2>Match overview</h2>
-          <span className="meta">{fixtureDisplayState(fixture.status, projection)}</span>
-          <p className="score">
-            {score.homeScore ?? "–"}–{score.awayScore ?? "–"}
-          </p>
+          <h2>Match status</h2>
+          <strong>
+            {hasScore ? fixtureDisplayState(fixture.status, projection) : "Awaiting kickoff"}
+          </strong>
+          {hasScore && (
+            <p className="score">
+              {score.homeScore ?? "–"}–{score.awayScore ?? "–"}
+            </p>
+          )}
         </div>
         <div>
-          <h2>{replayAvailable ? "Replay this match" : "Result verification"}</h2>
-          <strong>{fixtureMarketState(fixture)}</strong>
-          <p>
-            {replayAvailable
-              ? "This result can be replayed using the real TxLINE updates stored by Predict9ja."
-              : fixture.status === "SCHEDULED"
-                ? "Match tracking is available. Predictions are not currently available for this upcoming match."
+          <h2>
+            {fixture.status === "SCHEDULED"
+              ? "Match availability"
+              : replayAvailable
+                ? "Replay this match"
+                : "Result verification"}
+          </h2>
+          <strong>
+            {fixture.status === "SCHEDULED"
+              ? "Tracking starts at kickoff"
+              : fixtureMarketState(fixture)}
+          </strong>
+          {fixture.status === "SCHEDULED" ? (
+            <>
+              <p>TxLINE match updates will appear here when they become available.</p>
+              <p>Predictions are not open for this match.</p>
+              <p className="meta">Final-score verification is checked after full time.</p>
+            </>
+          ) : (
+            <p>
+              {replayAvailable
+                ? "This result can be replayed using the real TxLINE updates stored by Predict9ja."
                 : "Prediction availability is shown honestly from the current application state."}
-          </p>
+            </p>
+          )}
           {replayAvailable && (
             <Link className="button primary inline-button" href="/judge?mode=replay">
               Replay this match
@@ -94,28 +120,26 @@ export default async function FixtureDetails({
         {fanObservations.length ? (
           <div className="fan-timeline">
             {fanObservations.map((item) => {
-              const eventScore = displayedScore(
-                fixture.participant1IsHome,
-                item.participant1Goals,
-                item.participant2Goals,
-              );
+              const event = observationPresentation({
+                homeTeam: teams.homeTeam,
+                awayTeam: teams.awayTeam,
+                participant1IsHome: fixture.participant1IsHome,
+                participant1Goals: item.participant1Goals,
+                participant2Goals: item.participant2Goals,
+                phase: item.phase,
+                action: item.action,
+                finalised: item.finalised,
+                authoritative: item.providerSequence === 962,
+                sequence: item.providerSequence,
+              });
               return (
                 <article
                   className={item.providerSequence === 962 ? "authoritative-observation" : ""}
                   key={item.id}
                 >
-                  <strong>
-                    {item.action === "game_finalised"
-                      ? "Full time"
-                      : item.phase === "UNKNOWN"
-                        ? "Match update"
-                        : item.phase.replaceAll("_", " ").toLowerCase()}
-                  </strong>
-                  <span>
-                    {teams.homeTeam} {eventScore.homeScore ?? "–"}–{eventScore.awayScore ?? "–"}{" "}
-                    {teams.awayTeam}
-                  </span>
-                  {item.providerSequence === 962 && <small>Authoritative final observation</small>}
+                  <strong>{event.fanLabel}</strong>
+                  <span>{event.score}</span>
+                  {event.authorityLabel && <small>{event.authorityLabel}</small>}
                 </article>
               );
             })}
@@ -143,21 +167,46 @@ export default async function FixtureDetails({
             <dd>{fixture.participant2Name}</dd>
             <dt>Participant 1 is home</dt>
             <dd>{fixture.participant1IsHome ? "yes" : "no"}</dd>
-            <dt>Raw provider phase</dt>
-            <dd>{projection?.latestPhase ?? "UNKNOWN"}</dd>
+            <dt>Provider phase</dt>
+            <dd>
+              {providerPhasePresentation(projection?.latestPhase)}
+              <br />
+              <small>Raw value: {projection?.latestPhase ?? "UNKNOWN"}</small>
+            </dd>
           </dl>
           <h2>All stored observations</h2>
-          {fixture.scoreObservations.map((item) => (
-            <p
-              className={item.providerSequence === 962 ? "authoritative-observation" : ""}
-              key={item.id}
-            >
-              <strong>Sequence {item.providerSequence}</strong> · {item.phase} · {item.action} · P1{" "}
-              {item.participant1Goals ?? "–"} / P2 {item.participant2Goals ?? "–"}
-              {item.providerSequence === 962 && " · authoritative final evidence"}
-              {item.providerSequence === 963 && " · later non-authoritative observation"}
-            </p>
-          ))}
+          {fixture.scoreObservations.map((item) => {
+            const event = observationPresentation({
+              homeTeam: teams.homeTeam,
+              awayTeam: teams.awayTeam,
+              participant1IsHome: fixture.participant1IsHome,
+              participant1Goals: item.participant1Goals,
+              participant2Goals: item.participant2Goals,
+              phase: item.phase,
+              action: item.action,
+              finalised: item.finalised,
+              authoritative: item.providerSequence === 962,
+              sequence: item.providerSequence,
+            });
+            return (
+              <article
+                className={item.providerSequence === 962 ? "authoritative-observation" : ""}
+                key={item.id}
+              >
+                <strong>
+                  {event.title} · sequence {item.providerSequence}
+                </strong>
+                <p>{event.technicalSummary}</p>
+                <code className="digest">
+                  phase={item.phase} · action={item.action} · participant1Goals=
+                  {item.participant1Goals ?? "null"} · participant2Goals=
+                  {item.participant2Goals ?? "null"}
+                </code>
+                {item.providerSequence === 962 && <p>authoritative final evidence</p>}
+                {item.providerSequence === 963 && <p>later non-authoritative observation</p>}
+              </article>
+            );
+          })}
         </div>
       </details>
 

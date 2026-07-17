@@ -52,6 +52,7 @@ export default async function Judge({
         fixture: {
           homeTeam: demo.fixture.homeTeam,
           awayTeam: demo.fixture.awayTeam,
+          participant1IsHome: demo.fixture.participant1IsHome,
           finalised: demoProjection?.finalised ?? false,
           action: demoProjection?.latestAction ?? null,
           homeScore: demoProjection
@@ -143,7 +144,7 @@ export default async function Judge({
         </p>
         <div className="evidence-pipeline" aria-label="Evidence verification pipeline">
           {[
-            "TxLINE fixture",
+            "TxLINE match",
             "normalized observation",
             "proof predicates",
             "Solana validation",
@@ -192,8 +193,7 @@ export default async function Judge({
         <article>
           <strong>Synthetic demo demonstrates</strong>
           <p>
-            An instant provider-independent lifecycle using a fictional fixture and fictional
-            credits.
+            An instant provider-independent lifecycle using a fictional match and fictional credits.
           </p>
         </article>
       </section>

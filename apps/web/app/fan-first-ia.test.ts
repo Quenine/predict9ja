@@ -43,7 +43,7 @@ describe("fan-first information architecture", () => {
     const replay = read("app/judge/judge-demo.tsx");
     expect(replay).toContain("Historical replay visualization");
     expect(replay).toContain("demo.timeline.map");
-    expect(replay).toContain("event.sequence");
+    expect(replay).toContain("item.sequence");
     expect(replay).toContain("not a live SSE connection");
     expect(replay).not.toContain("sequence 963");
   });

@@ -35,7 +35,7 @@ export function fixtureProofState(fixture: CatalogueFixture) {
   if (fixture.proofVerifications.some((proof) => proof.fetchStatus === "FETCHED"))
     return "Verification data fetched" as const;
   const lifecycle = fixtureLifecycle(fixture);
-  if (lifecycle === "upcoming") return "Verification after full time" as const;
+  if (lifecycle === "upcoming") return "Verification not available yet" as const;
   if (lifecycle === "live") return "Verification pending" as const;
   return "Verification unavailable" as const;
 }
@@ -61,7 +61,7 @@ export function fixtureMarketState(fixture: CatalogueFixture) {
     return `Predictions: ${states.join(", ")}`;
   }
   const lifecycle = fixtureLifecycle(fixture);
-  if (lifecycle === "upcoming") return "Match tracking available";
+  if (lifecycle === "upcoming") return "Tracking starts at kickoff";
   if (lifecycle === "live") return "Predictions unavailable";
   return "Predictions unavailable";
 }

@@ -24,7 +24,7 @@ export default async function Portfolio() {
   if (!portfolio)
     return (
       <main className="shell">
-        <div className="eyebrow">Fictional demo portfolio</div>
+        <div className="eyebrow">Your demo history</div>
         <h1>My Picks</h1>
         <section className="card empty-state">
           <h2>You have not made a pick yet.</h2>
@@ -56,11 +56,10 @@ export default async function Portfolio() {
   ] as const;
   return (
     <main className="shell">
-      <div className="eyebrow">Fictional demo portfolio</div>
+      <div className="eyebrow">Your demo history</div>
       <h1>My Picks</h1>
       <p className="lead">
-        A readable record of this browser session’s fictional positions and deterministic
-        settlements.
+        A record of the picks made in this browser session and how each result was resolved.
       </p>
       <section className="catalogue-summary">
         {metrics.map(([label, value]) => (
@@ -74,7 +73,7 @@ export default async function Portfolio() {
         ))}
       </section>
       <section>
-        <h2>Positions</h2>
+        <h2>Picks</h2>
         <div className="grid">
           {portfolio.positions.map((position) => {
             const rawStatus = positionStatus(position);
@@ -86,21 +85,21 @@ export default async function Portfolio() {
               <article className="card position-card" key={position.id}>
                 <div className="fixture-badges">
                   <span className="pill">{statusLabel}</span>
-                  <span className="pill">Fictional credits</span>
+                  <span className="pill">Demo credits</span>
                 </div>
                 <h3>
                   {fixture.homeTeam} vs {fixture.awayTeam}
                 </h3>
                 <dl>
-                  <dt>Market</dt>
+                  <dt>Prediction</dt>
                   <dd>{position.market.title}</dd>
                   <dt>Selected outcome</dt>
                   <dd>{position.outcome.label}</dd>
                   <dt>Stake</dt>
                   <dd>{position.stakeCredits.toLocaleString()}</dd>
-                  <dt>Potential payout</dt>
+                  <dt>Potential return</dt>
                   <dd>{position.potentialPayoutCredits.toLocaleString()}</dd>
-                  <dt>Actual payout</dt>
+                  <dt>Demo return</dt>
                   <dd>{(position.actualPayoutCredits ?? 0).toLocaleString()}</dd>
                   {receipt && (
                     <>
@@ -138,16 +137,18 @@ export default async function Portfolio() {
         </div>
       </section>
       <section className="card observations ledger-timeline">
-        <h2>Fictional credit timeline</h2>
+        <h2>Demo credit timeline</h2>
         {portfolio.ledgerEntries.map((entry) => {
           const label =
             entry.entryType === "SESSION_GRANT"
-              ? "Credit grant"
+              ? "Demo credits added"
               : entry.entryType === "POSITION_PURCHASE"
-                ? "Position purchase"
+                ? "Pick placed"
                 : entry.entryType === "SETTLEMENT_PAYOUT"
-                  ? "Settlement payout"
-                  : entry.entryType.replaceAll("_", " ").toLowerCase();
+                  ? "Winning return"
+                  : entry.entryType === "VOID_REFUND"
+                    ? "Pick refunded"
+                    : "Demo reset";
           const receipt = portfolio.positions.find((position) => position.id === entry.positionId)
             ?.market.receipt;
           return (
