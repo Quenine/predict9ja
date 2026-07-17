@@ -3,7 +3,12 @@ import { judgeEvidenceState, selectJudgeProof } from "./evidence";
 import { JudgeDemo, type JudgeDemoView } from "./judge-demo";
 
 export const dynamic = "force-dynamic";
-export default async function Judge() {
+export default async function Judge({
+  searchParams,
+}: {
+  searchParams: Promise<{ mode?: string }>;
+}) {
+  const requestedMode = (await searchParams).mode === "synthetic" ? "SYNTHETIC" : "REPLAY";
   const result = await loadJudgePage();
   if (result.state !== "loaded")
     return (
@@ -35,6 +40,8 @@ export default async function Judge() {
   const demoView: JudgeDemoView | null = demo
     ? {
         balance: demo.account.availableCredits,
+        mode: demo.mode,
+        canonicalSourceId: demo.canonicalSourceId,
         fixture: {
           homeTeam: demo.fixture.homeTeam,
           awayTeam: demo.fixture.awayTeam,
@@ -90,6 +97,14 @@ export default async function Judge() {
           type: entry.entryType,
           amount: entry.amount,
         })),
+        timeline: demo.fixture.scoreObservations.map((observation) => ({
+          sequence: observation.providerSequence,
+          action: observation.action,
+          phase: observation.phase,
+          participant1Goals: observation.participant1Goals,
+          participant2Goals: observation.participant2Goals,
+          finalised: observation.finalised,
+        })),
       }
     : null;
 
@@ -103,7 +118,7 @@ export default async function Judge() {
         market rules, and produces auditable application receipts.
       </p>
 
-      <section className="evidence-card observations">
+      <section className="evidence-card observations" id="verified-evidence">
         <div className="section-label real">Real TxLINE + Solana evidence</div>
         <h2>{fixture ? `${fixture.homeTeam} vs ${fixture.awayTeam}` : "England vs Argentina"}</h2>
         <p className="evidence-score">{score}</p>
@@ -150,7 +165,23 @@ export default async function Judge() {
           </p>
         )}
       </section>
-      <JudgeDemo demo={demoView} />
+      <section className="mode-comparison observations">
+        <article>
+          <strong>Real replay demonstrates</strong>
+          <p>
+            Actual TxLINE fixture, stored observations, historical replay, deterministic application
+            settlement and verified source evidence.
+          </p>
+        </article>
+        <article>
+          <strong>Synthetic demo demonstrates</strong>
+          <p>
+            An instant provider-independent lifecycle using a fictional fixture and fictional
+            credits.
+          </p>
+        </article>
+      </section>
+      <JudgeDemo demo={demoView} initialMode={requestedMode} />
     </main>
   );
 }

@@ -10,6 +10,7 @@ export * from "./resolution";
 export * from "./proofs";
 export * from "./proof-classification";
 export * from "./judge-demo";
+export * from "./catalogue";
 
 export class PrismaAccelerateConfigurationError extends Error {
   constructor() {

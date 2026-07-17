@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 export type JudgeDemoView = Readonly<{
+  mode: "REPLAY" | "SYNTHETIC";
+  canonicalSourceId: string | null;
   balance: number;
   fixture: Readonly<{
     homeTeam: string;
@@ -41,6 +43,14 @@ export type JudgeDemoView = Readonly<{
     integrityDigest: string | null;
   }> | null;
   ledger: readonly Readonly<{ id: string; type: string; amount: number }>[];
+  timeline: readonly Readonly<{
+    sequence: number;
+    action: string;
+    phase: string;
+    participant1Goals: number | null;
+    participant2Goals: number | null;
+    finalised: boolean;
+  }>[];
 }>;
 
 type Selection = {
@@ -52,12 +62,16 @@ type Selection = {
   priceBasisPoints: number;
 };
 
-export function JudgeDemo({ demo }: Readonly<{ demo: JudgeDemoView | null }>) {
+export function JudgeDemo({
+  demo,
+  initialMode,
+}: Readonly<{ demo: JudgeDemoView | null; initialMode: "REPLAY" | "SYNTHETIC" }>) {
   const router = useRouter();
   const [selection, setSelection] = useState<Selection | null>(null);
   const [stake, setStake] = useState(1000);
   const [pending, setPending] = useState<"session" | "purchase" | "simulation" | null>(null);
   const [message, setMessage] = useState("");
+  const [mode, setMode] = useState<"REPLAY" | "SYNTHETIC">(demo?.mode ?? initialMode);
   const quote = useMemo(
     () => (selection ? calculatePosition(stake, selection.priceBasisPoints) : null),
     [selection, stake],
@@ -68,7 +82,11 @@ export function JudgeDemo({ demo }: Readonly<{ demo: JudgeDemoView | null }>) {
     setPending("session");
     setMessage("Creating an isolated judge demo…");
     try {
-      const response = await fetch("/api/demo/session", { method: "POST" });
+      const response = await fetch("/api/demo/session", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ mode }),
+      });
       setMessage(
         response.ok
           ? "Demo ready with exactly 10,000 fictional credits."
@@ -116,7 +134,7 @@ export function JudgeDemo({ demo }: Readonly<{ demo: JudgeDemoView | null }>) {
 
   async function simulate() {
     setPending("simulation");
-    setMessage("Applying the seeded synthetic match observations and settlement rules…");
+    setMessage("Applying the stored match observations and settlement rules…");
     try {
       const response = await fetch("/api/demo/simulate", { method: "POST" });
       setMessage(
@@ -134,12 +152,35 @@ export function JudgeDemo({ demo }: Readonly<{ demo: JudgeDemoView | null }>) {
 
   return (
     <section className="demo-panel observations">
-      <div className="section-label synthetic">Synthetic demo-credit market</div>
-      <h2>Experience deterministic settlement</h2>
+      <div className={`section-label ${mode === "REPLAY" ? "real" : "synthetic"}`}>
+        {mode === "REPLAY" ? "Real TxLINE replay" : "Instant synthetic demo"}
+      </div>
+      <h2>
+        {mode === "REPLAY"
+          ? "Run the verified match replay"
+          : "Experience instant deterministic settlement"}
+      </h2>
       <p>
-        The synthetic market demonstrates Predict9ja’s deterministic settlement engine. It does not
-        claim that the real TxLINE proof triggered a payout.
+        {mode === "REPLAY"
+          ? "Replay the actual stored England vs Argentina observations through authoritative sequence 962, then settle a fictional prediction in an isolated environment."
+          : "Use a provider-independent fictional fixture as an instant deterministic fallback."}
       </p>
+      <div className="mode-switcher" aria-label="Judge demo mode">
+        <button
+          className={mode === "REPLAY" ? "selected" : ""}
+          disabled={pending !== null}
+          onClick={() => setMode("REPLAY")}
+        >
+          Real TxLINE replay
+        </button>
+        <button
+          className={mode === "SYNTHETIC" ? "selected" : ""}
+          disabled={pending !== null}
+          onClick={() => setMode("SYNTHETIC")}
+        >
+          Instant synthetic demo
+        </button>
+      </div>
       <ol className="stepper" aria-label="Judge demo progress">
         {["Start demo", "Make prediction", "Run simulation", "Inspect result"].map(
           (label, index) => (
@@ -155,10 +196,19 @@ export function JudgeDemo({ demo }: Readonly<{ demo: JudgeDemoView | null }>) {
         <div>
           <span className="step-number">1</span>
           <h3>Start an isolated demo</h3>
-          <p>Creates a fresh anonymous session with exactly 10,000 fictional demo credits.</p>
+          <p>
+            Creates a fresh isolated {mode === "REPLAY" ? "historical replay" : "synthetic"} session
+            with exactly 10,000 fictional demo credits.
+          </p>
         </div>
         <button className="button primary" disabled={pending !== null} onClick={() => void start()}>
-          {pending === "session" ? "Starting…" : demo ? "Reset demo" : "Start judge demo"}
+          {pending === "session"
+            ? "Starting…"
+            : demo
+              ? `Reset ${mode === "REPLAY" ? "replay" : "demo"}`
+              : mode === "REPLAY"
+                ? "Run the verified match replay"
+                : "Try the instant synthetic demo"}
         </button>
         {demo && <strong className="balance">{demo.balance.toLocaleString()} demo credits</strong>}
       </article>
@@ -170,7 +220,11 @@ export function JudgeDemo({ demo }: Readonly<{ demo: JudgeDemoView | null }>) {
               <span className="step-number">2</span>
               <h3>Make a prediction</h3>
               <p>
-                {demo.fixture.homeTeam} vs {demo.fixture.awayTeam} · fictional demo credits only
+                {demo.fixture.homeTeam} vs {demo.fixture.awayTeam} ·{" "}
+                {demo.mode === "REPLAY"
+                  ? `canonical TxLINE source ${demo.canonicalSourceId}`
+                  : "fictional fixture"}{" "}
+                · fictional demo credits only
               </p>
             </div>
             <div className="judge-markets">
@@ -244,8 +298,8 @@ export function JudgeDemo({ demo }: Readonly<{ demo: JudgeDemoView | null }>) {
               <span className="step-number">3</span>
               <h3>Run deterministic match simulation</h3>
               <p>
-                Applies the six seeded observations through game_finalised, then resolves and
-                settles once.
+                Applies stored observations chronologically through game_finalised, then resolves
+                and settles once without artificial delay.
               </p>
             </div>
             <button
@@ -259,6 +313,27 @@ export function JudgeDemo({ demo }: Readonly<{ demo: JudgeDemoView | null }>) {
                   ? "Simulation complete"
                   : "Run match simulation"}
             </button>
+          </article>
+
+          <article className="demo-step">
+            <h3>
+              {demo.mode === "REPLAY" ? "Stored TxLINE event timeline" : "Synthetic event timeline"}
+            </h3>
+            <div className="replay-timeline">
+              {demo.timeline.map((event) => (
+                <div className={event.finalised ? "authoritative" : ""} key={event.sequence}>
+                  <strong>#{event.sequence}</strong>
+                  <span>{event.phase.replaceAll("_", " ").toLowerCase()}</span>
+                  <span>
+                    P1 {event.participant1Goals ?? "–"} · P2 {event.participant2Goals ?? "–"}
+                  </span>
+                  <small>
+                    {event.action}
+                    {event.finalised ? " · authoritative final" : ""}
+                  </small>
+                </div>
+              ))}
+            </div>
           </article>
 
           {demo.position && demo.fixture.finalised && (

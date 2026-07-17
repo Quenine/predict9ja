@@ -93,6 +93,18 @@ export function listFixtureMarkets(sourceId: string, client: PrismaClient = db) 
     include: {
       scoreProjection: true,
       replayState: true,
+      proofVerifications: {
+        orderBy: { updatedAt: "desc" },
+        select: {
+          providerSequence: true,
+          fetchStatus: true,
+          validationStatus: true,
+          observationClassification: true,
+          settlementEvidenceClassification: true,
+          proofPayloadDigest: true,
+          network: true,
+        },
+      },
       scoreObservations: { orderBy: { providerSequence: "desc" }, take: 20 },
       markets: {
         orderBy: { displayOrder: "asc" },

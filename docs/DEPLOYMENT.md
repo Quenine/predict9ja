@@ -18,6 +18,15 @@ From a secure local operator shell connected to the remote database, run pnpm tx
 
 If guarded diagnostics are required, use a disposable funded devnet wallet outside the repository. Never upload it to the host or commit its path or secret material.
 
+## Automated TxLINE fixture catalogue
+
+The `TxLINE fixture catalogue sync` GitHub Actions workflow runs every 30 minutes and can also be started with `workflow_dispatch`. In repository Settings → Secrets and variables → Actions, add these repository secrets:
+
+- `PRISMA_ACCELERATE_URL`: the production Prisma Accelerate URL beginning with `prisma://` or `prisma+postgres://`.
+- `TXLINE_API_TOKEN`: the activated TxLINE API token.
+
+The workflow supplies `TXLINE_NETWORK=devnet` and `TXLINE_REQUEST_TIMEOUT_MS=30000` as non-secret configuration. It generates Prisma Client with `--no-engine` and runs only `pnpm txline:sync-fixtures`. It does not run migrations, seeds, resets, proof verification, settlement, or diagnostic-wallet operations. Workflow concurrency prevents overlapping catalogue syncs.
+
 ## Verify
 
 Open /judge and confirm fixture 18241006, sequence 962, score 1–2, game_finalised, the documented digest/program/PDA, read-only VERIFIED, final-match wording, and the no-receipt note. Confirm the synthetic demo-credit section is visibly separate.

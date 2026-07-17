@@ -2,10 +2,12 @@ import {
   db,
   getAccountPortfolio,
   getAdminSummary,
+  getFixtureCatalogue,
   getJudgeDemoState,
-  getReceipt,
+  getJudgeReceiptContext,
   listFixtureMarkets,
-  listFixturesWithMarkets,
+  judgeDemoSourceId,
+  judgeReplaySourceId,
 } from "@predict9ja/db";
 import { currentDemoAccount } from "./session-context";
 import { requireWebDatabaseEnvironment, safeRuntimeCategory } from "./server-runtime";
@@ -27,24 +29,28 @@ async function databaseLoad<T>(load: () => Promise<T>): Promise<PageLoadResult<T
   }
 }
 
-export const loadArenaPage = () => databaseLoad(() => listFixturesWithMarkets());
+export const loadArenaPage = () => databaseLoad(() => getFixtureCatalogue());
 export const loadAdminPage = () =>
   databaseLoad(async () => {
     await db.$queryRawUnsafe("SELECT 1");
     return getAdminSummary();
   });
 export async function loadFixturePage(sourceId: string) {
-  const result = await databaseLoad(() => listFixtureMarkets(sourceId));
-  if (result.state === "loaded" && !result.data) return { state: "not_found" as const };
-  if (result.state !== "loaded") return result;
   let account = null;
   try {
     account = await currentDemoAccount();
-  } catch (error) {
-    console.error(
-      JSON.stringify({ event: "web.loader.failed", category: safeRuntimeCategory(error) }),
-    );
+  } catch {
+    account = null;
   }
+  if (
+    (sourceId.startsWith("judge-demo-") || sourceId.startsWith("judge-replay:")) &&
+    (!account ||
+      (sourceId !== judgeDemoSourceId(account.id) && sourceId !== judgeReplaySourceId(account.id)))
+  )
+    return { state: "not_found" as const };
+  const result = await databaseLoad(() => listFixtureMarkets(sourceId));
+  if (result.state === "loaded" && !result.data) return { state: "not_found" as const };
+  if (result.state !== "loaded") return result;
   return { state: "loaded" as const, data: { fixture: result.data, account } };
 }
 export async function loadPortfolioPage() {
@@ -57,7 +63,13 @@ export async function loadPortfolioPage() {
   }
 }
 export async function loadReceiptPage(id: string) {
-  const result = await databaseLoad(() => getReceipt(id));
+  let account = null;
+  try {
+    account = await currentDemoAccount();
+  } catch {
+    account = null;
+  }
+  const result = await databaseLoad(() => getJudgeReceiptContext(id, account?.id ?? null));
   if (result.state === "loaded" && !result.data) return { state: "not_found" as const };
   return result;
 }

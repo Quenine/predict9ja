@@ -6,6 +6,9 @@ import {
   hashSessionToken,
   importScoreHistory,
   initializeJudgeDemo,
+  initializeJudgeMode,
+  getJudgeReceiptContext,
+  getFixtureCatalogue,
   persistScore,
   purchasePosition,
   reconcileAccount,
@@ -351,9 +354,9 @@ describe("browser judge demo", () => {
       },
       client,
     );
-    const first = await runJudgeDemoSimulation(account.id, client);
+    const first = await runJudgeDemoSimulation(account.id, undefined, client);
     const balanceAfterFirst = first.state!.account.availableCredits;
-    const second = await runJudgeDemoSimulation(account.id, client);
+    const second = await runJudgeDemoSimulation(account.id, undefined, client);
     expect(second.state!.account.availableCredits).toBe(balanceAfterFirst);
     expect(second.reconciliation.reconciled).toBe(true);
     expect(second.state!.fixture.scoreProjection).toMatchObject({
@@ -373,5 +376,159 @@ describe("browser judge demo", () => {
     expect(await client.resolutionReceipt.count({ where: { proofVerificationId: proof.id } })).toBe(
       0,
     );
+  });
+});
+
+async function realReplayTemplate() {
+  const canonical = await client.fixture.create({
+    data: {
+      sourceId: "18241006",
+      sourceMode: "LIVE",
+      homeTeam: "England",
+      awayTeam: "Argentina",
+      participant1Name: "England",
+      participant2Name: "Argentina",
+      participant1IsHome: true,
+      startsAt: new Date("2026-06-01T18:00:00Z"),
+      status: "FINISHED",
+      scoreObservations: {
+        create: [
+          {
+            providerSequence: 960,
+            providerTimestamp: new Date("2026-06-01T19:40:00Z"),
+            action: "score_update",
+            phase: "SECOND_HALF",
+            participant1Goals: 1,
+            participant2Goals: 1,
+            finalised: false,
+            sourceMode: "LIVE",
+          },
+          {
+            providerSequence: 962,
+            providerTimestamp: new Date("2026-06-01T19:51:00Z"),
+            action: "game_finalised",
+            phase: "UNKNOWN",
+            participant1Goals: 1,
+            participant2Goals: 2,
+            finalised: true,
+            sourceMode: "LIVE",
+          },
+          {
+            providerSequence: 963,
+            providerTimestamp: new Date("2026-06-01T19:52:00Z"),
+            action: "score_update",
+            phase: "UNKNOWN",
+            participant1Goals: 9,
+            participant2Goals: 9,
+            finalised: false,
+            sourceMode: "LIVE",
+          },
+        ],
+      },
+    },
+  });
+  const finalObservation = await client.scoreObservation.findUniqueOrThrow({
+    where: { fixtureId_providerSequence: { fixtureId: canonical.id, providerSequence: 962 } },
+  });
+  const proof = await client.scoreProofVerification.create({
+    data: {
+      fixtureId: canonical.id,
+      fixtureSourceId: canonical.sourceId,
+      providerSequence: 962,
+      scoreObservationId: finalObservation.id,
+      network: "devnet",
+      statKeys: [1, 2],
+      statValues: [1, 2],
+      statKeyIdentity: "1,2",
+      proofPayloadDigest: "0abc3af2ebb38623b3d2e89ebb4e19071e4b867be814c7107d0fa7d8921808a7",
+      programId: "6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J",
+      dailyScoresPda: "HJ6nSVkUs4VG9JQ5sEUq3VbmyUSBf76ePXUCATLtRYTX",
+      fetchStatus: "FETCHED",
+      validationStatus: "VERIFIED",
+      observationClassification: "FINAL_MATCH_OBSERVATION",
+      settlementEvidenceClassification: "FINAL_DATA_VERIFIED_NO_RECEIPT",
+    },
+  });
+  return { canonical, proof };
+}
+
+describe("real TxLINE judge replay", () => {
+  it("isolates observations through 962, settles 1-2 idempotently and preserves canonical evidence", async () => {
+    const { canonical, proof } = await realReplayTemplate();
+    const canonicalBefore = await client.scoreObservation.findMany({
+      where: { fixtureId: canonical.id },
+      orderBy: { providerSequence: "asc" },
+    });
+    const account = (await createDemoSession("integration-secret-value", client)).account;
+    const other = (await createDemoSession("integration-secret-value", client)).account;
+    const state = await initializeJudgeMode(account.id, "REPLAY", client);
+    const otherState = await initializeJudgeMode(other.id, "REPLAY", client);
+    expect(state).toMatchObject({ mode: "REPLAY", canonicalSourceId: "18241006" });
+    expect(state!.fixture.sourceMode).toBe("REPLAY");
+    expect(state!.fixture.sourceId).toBe(`judge-replay:18241006:${account.id}`);
+    expect(otherState!.fixture.sourceId).not.toBe(state!.fixture.sourceId);
+    expect(state!.fixture.scoreObservations.map((value) => value.providerSequence)).toEqual([
+      960, 962,
+    ]);
+    const catalogue = await getFixtureCatalogue(client);
+    expect(catalogue.fixtures.some((value) => value.sourceId === canonical.sourceId)).toBe(true);
+    expect(catalogue.fixtures.some((value) => value.sourceMode === "REPLAY")).toBe(false);
+    expect(
+      await client.scoreObservation.findMany({
+        where: { fixtureId: canonical.id },
+        orderBy: { providerSequence: "asc" },
+      }),
+    ).toEqual(canonicalBefore);
+    const market = state!.fixture.markets.find((value) => value.ruleVersion === "match-result@1")!;
+    const away = market.outcomes.find((value) => value.key === "AWAY")!;
+    await purchasePosition(
+      account.id,
+      {
+        marketId: market.id,
+        outcomeKey: "AWAY",
+        stakeCredits: 1_000,
+        quoteVersion: away.quotes[0]!.version,
+        idempotencyKey: "real-replay-away",
+      },
+      client,
+    );
+    const first = await runJudgeDemoSimulation(account.id, "REPLAY", client);
+    const second = await runJudgeDemoSimulation(account.id, "REPLAY", client);
+    expect(first.state!.fixture.scoreProjection).toMatchObject({
+      latestSequence: 962,
+      latestAction: "game_finalised",
+      participant1Goals: 1,
+      participant2Goals: 2,
+      finalised: true,
+    });
+    expect(first.state!.fixture.markets.map((value) => value.receipt?.winningOutcomeKey)).toEqual([
+      "AWAY",
+      "OVER",
+      "YES",
+    ]);
+    expect(second.state!.account.availableCredits).toBe(first.state!.account.availableCredits);
+    expect(second.reconciliation.reconciled).toBe(true);
+    const receiptId = first.state!.fixture.markets[0]!.receipt!.id;
+    const context = await getJudgeReceiptContext(receiptId, account.id, client);
+    expect(context).toMatchObject({
+      receiptContext: "HISTORICAL_REPLAY",
+      canonicalSourceId: "18241006",
+      replaySourceEvidence: {
+        id: proof.id,
+        validationStatus: "VERIFIED",
+        settlementEvidenceClassification: "FINAL_DATA_VERIFIED_NO_RECEIPT",
+      },
+    });
+    expect(await getJudgeReceiptContext(receiptId, other.id, client)).toBeNull();
+    expect(await client.resolutionReceipt.count({ where: { proofVerificationId: proof.id } })).toBe(
+      0,
+    );
+    expect(
+      await client.scoreProofVerification.findUniqueOrThrow({ where: { id: proof.id } }),
+    ).toMatchObject({
+      validationStatus: "VERIFIED",
+      settlementEvidenceClassification: "FINAL_DATA_VERIFIED_NO_RECEIPT",
+      proofPayloadDigest: "0abc3af2ebb38623b3d2e89ebb4e19071e4b867be814c7107d0fa7d8921808a7",
+    });
   });
 });
