@@ -82,14 +82,14 @@ For the featured replay, sequence `962` is authoritative because it is the expli
 
 ## TxLINE integration
 
-| Endpoint | Purpose |
-| --- | --- |
-| `POST /auth/guest/start` | Obtain an in-memory guest JWT |
-| `GET /api/fixtures/snapshot` | Synchronize the devnet fixture catalogue |
-| `GET /api/scores/snapshot/{fixtureId}` | Fetch controlled score snapshots |
-| `GET /api/scores/historical/{fixtureId}` | Import ordered historical observations |
-| `GET /api/scores/stream` | Consume score events through SSE |
-| `GET /api/scores/stat-validation` | Retrieve proof material for exact score predicates |
+| Endpoint                                 | Purpose                                            |
+| ---------------------------------------- | -------------------------------------------------- |
+| `POST /auth/guest/start`                 | Obtain an in-memory guest JWT                      |
+| `GET /api/fixtures/snapshot`             | Synchronize the devnet fixture catalogue           |
+| `GET /api/scores/snapshot/{fixtureId}`   | Fetch controlled score snapshots                   |
+| `GET /api/scores/historical/{fixtureId}` | Import ordered historical observations             |
+| `GET /api/scores/stream`                 | Consume score events through SSE                   |
+| `GET /api/scores/stat-validation`        | Retrieve proof material for exact score predicates |
 
 SSE support is implemented but is not continuously hosted on Vercel. Historical replay uses observations already stored by the application. Provider credentials remain server-side. TxLINE odds are not currently consumed.
 
@@ -108,16 +108,16 @@ Next.js, React, TypeScript, Node.js 22, Turborepo, pnpm, PostgreSQL, Prisma, Pri
 
 ## Repository structure
 
-| Path | Responsibility |
-| --- | --- |
-| `apps/web` | Public Next.js application and API routes |
-| `apps/worker` | TxLINE ingestion, replay and operator commands |
-| `packages/domain` | Framework-independent prediction and resolution rules |
-| `packages/txline` | TxLINE transport, authentication and normalization |
-| `packages/verification` | Proof normalization, digests and Solana validation |
-| `packages/db` | Prisma models, persistence, settlement and receipts |
-| `docs` | Architecture, integration and operations documentation |
-| `scripts` | Development, integration-test and runtime-smoke tooling |
+| Path                    | Responsibility                                          |
+| ----------------------- | ------------------------------------------------------- |
+| `apps/web`              | Public Next.js application and API routes               |
+| `apps/worker`           | TxLINE ingestion, replay and operator commands          |
+| `packages/domain`       | Framework-independent prediction and resolution rules   |
+| `packages/txline`       | TxLINE transport, authentication and normalization      |
+| `packages/verification` | Proof normalization, digests and Solana validation      |
+| `packages/db`           | Prisma models, persistence, settlement and receipts     |
+| `docs`                  | Architecture, integration and operations documentation  |
+| `scripts`               | Development, integration-test and runtime-smoke tooling |
 
 ## Getting started
 

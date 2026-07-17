@@ -22,14 +22,14 @@ flowchart LR
     DBPackage --> Worker
 ```
 
-| Component | Responsibility |
-| --- | --- |
-| `apps/web` | Public fixture catalogue, match pages, replay experience, demo predictions, portfolio, receipts and read-only diagnostics |
-| `apps/worker` | TxLINE synchronization, score ingestion, historical imports, replay commands, proof retrieval, verification and market operations |
-| `packages/domain` | Pure market definitions, rule versions, score-to-outcome resolution and participant orientation |
-| `packages/txline` | Guest authentication, HTTP/SSE transport, timeouts, typed errors and normalization |
-| `packages/verification` | Proof normalization, canonical digests, provider checks and Solana read-only validation |
-| `packages/db` | Prisma client, normalized persistence, sessions, accounts, markets, ledger entries, settlement and receipts |
+| Component               | Responsibility                                                                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `apps/web`              | Public fixture catalogue, match pages, replay experience, demo predictions, portfolio, receipts and read-only diagnostics         |
+| `apps/worker`           | TxLINE synchronization, score ingestion, historical imports, replay commands, proof retrieval, verification and market operations |
+| `packages/domain`       | Pure market definitions, rule versions, score-to-outcome resolution and participant orientation                                   |
+| `packages/txline`       | Guest authentication, HTTP/SSE transport, timeouts, typed errors and normalization                                                |
+| `packages/verification` | Proof normalization, canonical digests, provider checks and Solana read-only validation                                           |
+| `packages/db`           | Prisma client, normalized persistence, sessions, accounts, markets, ledger entries, settlement and receipts                       |
 
 PostgreSQL is the application system of record. Vercel uses Prisma Accelerate as the serverless runtime transport, while administrative migrations and seed operations use the normal PostgreSQL connection.
 

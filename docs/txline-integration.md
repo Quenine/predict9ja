@@ -10,14 +10,14 @@ The client deduplicates concurrent authentication requests, refreshes once after
 
 ## Endpoints
 
-| Endpoint | Purpose | Use in Predict9ja |
-| --- | --- | --- |
-| `POST /auth/guest/start` | Obtain a guest JWT | Used before authenticated TxLINE operations |
-| `GET /api/fixtures/snapshot` | Retrieve the fixture catalogue | Transactional catalogue synchronization |
-| `GET /api/scores/snapshot/{fixtureId}` | Retrieve a controlled score snapshot | Operator ingestion and diagnostics |
-| `GET /api/scores/historical/{fixtureId}` | Retrieve historical score observations | Ordered import for the verified replay |
-| `GET /api/scores/stream` | Consume score events through SSE | Checkpointed worker ingestion |
-| `GET /api/scores/stat-validation` | Retrieve score-stat proof material | Exact observation verification |
+| Endpoint                                 | Purpose                                | Use in Predict9ja                           |
+| ---------------------------------------- | -------------------------------------- | ------------------------------------------- |
+| `POST /auth/guest/start`                 | Obtain a guest JWT                     | Used before authenticated TxLINE operations |
+| `GET /api/fixtures/snapshot`             | Retrieve the fixture catalogue         | Transactional catalogue synchronization     |
+| `GET /api/scores/snapshot/{fixtureId}`   | Retrieve a controlled score snapshot   | Operator ingestion and diagnostics          |
+| `GET /api/scores/historical/{fixtureId}` | Retrieve historical score observations | Ordered import for the verified replay      |
+| `GET /api/scores/stream`                 | Consume score events through SSE       | Checkpointed worker ingestion               |
+| `GET /api/scores/stat-validation`        | Retrieve score-stat proof material     | Exact observation verification              |
 
 Provider credentials remain server-side. TxLINE odds are not consumed; Predict9ja generates fixed application quotes for demonstration purposes.
 
