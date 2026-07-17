@@ -111,6 +111,58 @@ export default async function Home() {
           application-generated and are not TxLINE odds.
         </p>
       </section>
+      <section aria-labelledby="commercial-path-title">
+        <div className="eyebrow">Commercial path</div>
+        <h2 id="commercial-path-title">Infrastructure for auditable fan engagement</h2>
+        <div className="grid">
+          <article className="card">
+            <h3>Communities and media</h3>
+            <p>
+              White-label prediction experiences, sponsored tournament campaigns and premium
+              community leagues using fictional points.
+            </p>
+          </article>
+          <article className="card">
+            <h3>Developer platform</h3>
+            <p>
+              A settlement and evidence API for teams building transparent sports-data applications.
+            </p>
+          </article>
+          <article className="card">
+            <h3>Enterprise audit</h3>
+            <p>
+              Inspectable data lineage and deterministic outcome tooling for sports
+              applications—without custody or wagering.
+            </p>
+          </article>
+        </div>
+      </section>
+      <section aria-labelledby="commercial-path-title">
+        <div className="eyebrow">Commercial path</div>
+        <h2 id="commercial-path-title">Infrastructure for auditable fan engagement</h2>
+        <div className="grid">
+          <article className="card">
+            <h3>Communities and media</h3>
+            <p>
+              White-label prediction experiences, sponsored tournament campaigns and premium
+              community leagues using fictional points.
+            </p>
+          </article>
+          <article className="card">
+            <h3>Developer platform</h3>
+            <p>
+              A settlement and evidence API for teams building transparent sports-data applications.
+            </p>
+          </article>
+          <article className="card">
+            <h3>Enterprise audit</h3>
+            <p>
+              Inspectable data lineage and deterministic outcome tooling for sports
+              applications—without custody or wagering.
+            </p>
+          </article>
+        </div>
+      </section>
     </main>
   );
 }

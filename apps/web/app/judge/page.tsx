@@ -1,8 +1,15 @@
 import { loadJudgePage } from "../page-loaders";
 import { judgeEvidenceState, selectJudgeProof } from "./evidence";
 import { JudgeDemo, type JudgeDemoView } from "./judge-demo";
+import type { Metadata } from "next";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Verified replay",
+  description:
+    "Make a fictional prediction, replay real TxLINE observations, settle deterministically and inspect verified source evidence.",
+};
 export default async function Judge({
   searchParams,
 }: {
@@ -117,8 +124,18 @@ export default async function Judge({
         selected score predicates against TxLINE’s Solana devnet program, applies deterministic
         market rules, and produces auditable application receipts.
       </p>
+      <ol className="judge-path" aria-label="Verified replay path">
+        <li>Make a fictional prediction</li>
+        <li>Replay actual TxLINE observations</li>
+        <li>Settle deterministically</li>
+        <li>Inspect verified evidence</li>
+      </ol>
+      <Link className="button primary inline-button" href="#interactive-replay">
+        Start the interactive replay
+      </Link>
 
-      <section className="evidence-card observations" id="verified-evidence">
+      <details className="evidence-card observations" id="verified-evidence">
+        <summary>Technical source evidence</summary>
         <div className="section-label real">Real TxLINE + Solana evidence</div>
         <h2>{fixture ? `${fixture.homeTeam} vs ${fixture.awayTeam}` : "England vs Argentina"}</h2>
         <p className="evidence-score">{score}</p>
@@ -164,7 +181,7 @@ export default async function Judge({
             No real-market settlement receipt is linked to this proof.
           </p>
         )}
-      </section>
+      </details>
       <section className="mode-comparison observations">
         <article>
           <strong>Real replay demonstrates</strong>

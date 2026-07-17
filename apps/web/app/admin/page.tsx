@@ -1,12 +1,17 @@
 import { loadAdminPage } from "../page-loaders";
+import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "System diagnostics",
+  robots: { index: false, follow: false },
+};
 export default async function Admin() {
   const result = await loadAdminPage();
   if (result.state !== "loaded")
     return (
       <main className="shell">
-        <div className="eyebrow">Local controls</div>
-        <h1>Development console</h1>
+        <div className="eyebrow">Internal technical view</div>
+        <h1>System diagnostics</h1>
         <section className="card">
           <h2>Operational data unavailable</h2>
           <p>Operational data could not be loaded.</p>
@@ -16,8 +21,8 @@ export default async function Admin() {
   const summary = result.data;
   return (
     <main className="shell">
-      <div className="eyebrow">Local controls</div>
-      <h1>Development console</h1>
+      <div className="eyebrow">Internal technical view</div>
+      <h1>System diagnostics</h1>
       <section className="grid">
         <article className="card">
           <h2>Database connected</h2>
@@ -82,27 +87,31 @@ export default async function Admin() {
           <p>{summary.checkpoint?.updatedAt.toISOString() ?? "No TxLINE sync recorded."}</p>
         </article>
       </section>
-      <section className="card">
-        <h2>Safe demo CLI</h2>
-        <p>
-          <code>pnpm markets:generate-all</code> ·{" "}
-          <code>pnpm markets:resolve --fixture-id ID --dry-run</code> ·{" "}
-          <code>pnpm markets:settle --fixture-id ID</code> · <code>pnpm demo:reset</code> ·{" "}
-          <code>pnpm demo:run</code>
-        </p>
-      </section>
-      <section className="card">
-        <h2>Safe CLI synchronization</h2>
-        <p>
-          Set server-only TxLINE variables, then run <code>pnpm txline:probe</code> followed by{" "}
-          <code>pnpm txline:sync-fixtures</code>. Score commands are{" "}
-          <code>pnpm txline:probe-scores --fixture-id ID</code>,{" "}
-          <code>pnpm txline:import-history --fixture-id ID</code>,{" "}
-          <code>pnpm txline:stream-scores --duration 60</code>, and{" "}
-          <code>pnpm txline:replay-scores --fixture-id ID --speed 60</code>. No sync endpoint is
-          exposed.
-        </p>
-      </section>
+      {process.env.NODE_ENV !== "production" && (
+        <section className="card">
+          <h2>Safe demo CLI</h2>
+          <p>
+            <code>pnpm markets:generate-all</code> ·{" "}
+            <code>pnpm markets:resolve --fixture-id ID --dry-run</code> ·{" "}
+            <code>pnpm markets:settle --fixture-id ID</code> · <code>pnpm demo:reset</code> ·{" "}
+            <code>pnpm demo:run</code>
+          </p>
+        </section>
+      )}
+      {process.env.NODE_ENV !== "production" && (
+        <section className="card">
+          <h2>Safe CLI synchronization</h2>
+          <p>
+            Set server-only TxLINE variables, then run <code>pnpm txline:probe</code> followed by{" "}
+            <code>pnpm txline:sync-fixtures</code>. Score commands are{" "}
+            <code>pnpm txline:probe-scores --fixture-id ID</code>,{" "}
+            <code>pnpm txline:import-history --fixture-id ID</code>,{" "}
+            <code>pnpm txline:stream-scores --duration 60</code>, and{" "}
+            <code>pnpm txline:replay-scores --fixture-id ID --speed 60</code>. No sync endpoint is
+            exposed.
+          </p>
+        </section>
+      )}
     </main>
   );
 }

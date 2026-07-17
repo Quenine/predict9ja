@@ -1,69 +1,147 @@
-# Predict9ja World Cup Arena
+# Predict9ja
 
-Predict9ja is a hackathon prototype combining real TxLINE football evidence with a separate, non-custodial demo-credit prediction market. Judges can inspect a real final score, its normalized TxLINE proof, and read-only verification against the official TxLINE Solana devnet program.
+**Production:** https://predict9ja-web.vercel.app
 
-> Hackathon prototype — real TxLINE sports evidence; demo-credit markets and no real-value transactions.
+**Public repository:** https://github.com/Quenine/predict9ja
 
-## Problem and solution
+## 1. Product summary
 
-Sports prediction products often ask users to trust opaque data and settlement. Predict9ja retains canonical observations, retrieves a bounded proof for an exact fixture/sequence/stat identity, computes a deterministic digest, and validates it through a read-only Solana call. A separate synthetic flow demonstrates anonymous demo-credit positions, deterministic resolution, ledger reconciliation, and application receipts.
+Predict9ja turns TxLINE match observations into deterministic prediction settlement and gives every result an inspectable application receipt backed by verifiable source evidence. It is a non-custodial hackathon product using fictional demo credits only.
 
-## Why TxLINE
+## 2. Problem
 
-TxLINE supplies fixture and score snapshots, history/SSE, and stat-validation proofs connecting off-chain sports data to verifiable on-chain roots. Provider credentials stay server-side; raw provider responses are not archived or logged.
+Football prediction experiences often hide the source data and settlement path. Fans see an outcome but cannot inspect which observation finalised it, which rule ran, or whether accounting was applied twice.
 
-## Architecture and repository
+## 3. Why Predict9ja is different
 
-- apps/web: Next.js Judge Mode, arena, portfolio, receipts, and administration.
-- apps/worker: ingestion, proof retrieval, verification, replay, and market commands.
-- packages/txline: authenticated transport, normalization, bounded retries, safe errors.
-- packages/verification: proof schema, digest, IDL-pinned read-only Solana validation.
-- packages/db: Prisma/PostgreSQL persistence, classification, markets, ledger, receipts.
-- packages/domain: framework-independent market and settlement rules.
+Predict9ja preserves normalized observations in sequence order, resolves explicit deterministic rules, settles an isolated credit ledger idempotently, and produces an integrity-digested application receipt. Historical replay lets judges exercise the complete flow without pretending a prediction existed before the original match.
 
-A bounded normalized proof envelope is persisted for deterministic retries, never the complete raw provider response. Normal validation may use an ephemeral provider; guarded CLI diagnostics may use a disposable funded devnet wallet. Secret bytes and wallet paths are never persisted or logged.
+## 4. Why TxLINE is indispensable
 
-## Key judge flow
+TxLINE provides the canonical fixture identity, participant orientation, score observations, historical access, proof identity and stat-validation material. Predict9ja does not label its fixed application demo quotes as TxLINE odds.
 
-1. Open /judge and inspect **Real TxLINE data and Solana proof verification**.
-2. Confirm the final observation, digest, program, PDA, and read-only validation.
-3. Continue to **Synthetic demo-credit prediction and settlement**.
-4. Open a fictional position, run the synthetic replay, and inspect its separate receipt.
+## 5. Real TxLINE historical replay
 
-The synthetic payout is not triggered by the real proof.
+The flagship flow replays England 1–2 Argentina, canonical fixture `18241006`, through authoritative `game_finalised` sequence `962`. Sequence `963` is retained as a later non-authoritative provider observation and is never presented as final evidence. The replay prediction is created now using fictional credits; it is not represented as an historical wager.
 
-## Verified real evidence
+## 6. Synthetic fallback
 
-| Field                | Evidence                                                         |
-| -------------------- | ---------------------------------------------------------------- |
-| Fixture / sequence   | 18241006 / 962                                                   |
-| Action / score       | game_finalised / 1–2                                             |
-| Keys / values        | 1, 2 / 1, 2                                                      |
-| Proof digest         | 0abc3af2ebb38623b3d2e89ebb4e19071e4b867be814c7107d0fa7d8921808a7 |
-| Network / validation | devnet / read-only VERIFIED                                      |
-| Program              | 6pW64gN1s2uqjHkn1unFeEjAwJkPGHoppGvS715wyP2J                     |
-| Daily-root PDA       | HJ6nSVkUs4VG9JQ5sEUq3VbmyUSBf76ePXUCATLtRYTX                     |
-| Classification       | FINAL_MATCH_OBSERVATION                                          |
-| Settlement evidence  | FINAL_DATA_VERIFIED_NO_RECEIPT                                   |
+The synthetic Kora City fixture is a provider-independent instant demo. It demonstrates the same application lifecycle when provider access is unavailable, while clearly separating fictional events from TxLINE evidence.
 
-No matching real-market settlement receipt is linked.
+## 7. Deterministic settlement and ledger
 
-## Technology and local setup
+Versioned rules determine winning outcomes from an explicitly finalised score. Purchases preserve quote version and stake, settlement is idempotent, and the reconciled append-only fictional-credit ledger records grants, purchases, payouts and refunds. There are no deposits, withdrawals, custody or real-value transfers.
 
-Node 22, pnpm workspaces, TypeScript, Next.js 15, PostgreSQL 16, Prisma, Zod, Vitest, Anchor/Solana web3, and Turbo.
+## 8. Solana proof validation
 
-1. Copy .env.example to .env and replace placeholders locally.
-2. Ensure the local file contains DEMO_SESSION_SECRET. Generate one safely with
-   node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))".
-3. Run: pnpm install --frozen-lockfile; pnpm db:up; pnpm db:generate; pnpm db:deploy; pnpm db:seed; pnpm dev.
-4. Use pnpm dev:all only when deliberately running both the web app and idle worker.
-5. Verify with pnpm db:test:prepare, pnpm verify:foundation, pnpm format:check, pnpm lint, pnpm typecheck, pnpm test, pnpm build, and pnpm check:web-runtime.
+For the canonical final observation, Predict9ja stores a bounded normalized proof envelope and validates exact stat predicates against TxLINE’s Solana devnet program. This verifies source observation data; it does **not** prove the fictional prediction or payout.
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production setup.
+## 9. Architecture
 
-## Limitations and security
+- `apps/web`: Next.js fixtures, verified replay, predictions, receipts and read-only diagnostics.
+- `apps/worker`: fixture/score ingestion, replay, proof retrieval and verification commands.
+- `packages/txline`: authenticated HTTP/SSE transport, normalization, timeouts and safe errors.
+- `packages/verification`: proof digest and IDL-pinned read-only Solana validation.
+- `packages/db`: Prisma/PostgreSQL observations, projections, markets, ledger and receipts.
+- `packages/domain`: framework-independent rules and display orientation.
 
-No real-value transactions, custody, deposits, withdrawals, TxLINE odds, or automatic real-proof market settlement. Demo credits have no monetary value. Proof validation is read-only. Tokens, JWTs, database credentials, session secrets, and wallet material stay outside source control.
+Vercel uses Prisma Accelerate for runtime database transport. Administrative migrations and seeds continue to use a normal PostgreSQL `DATABASE_URL`.
 
-- Live demo: _add deployment URL_
-- Demo video: _add video URL_
+## 10. Exact TxLINE endpoints used
+
+| Endpoint                                 | Purpose                                                   | Runtime status                                                      |
+| ---------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------- |
+| `POST /auth/guest/start`                 | Obtain an in-memory guest JWT                             | Used by all authenticated TxLINE operations                         |
+| `GET /api/fixtures/snapshot`             | Synchronize the devnet fixture catalogue                  | Used in production catalogue synchronization                        |
+| `GET /api/scores/snapshot/{fixtureId}`   | Fetch a fixture score snapshot                            | Implemented for operator ingestion/probes; not continuously hosted  |
+| `GET /api/scores/historical/{fixtureId}` | Import bounded historical observations                    | Used for replay/import within TxLINE’s availability window          |
+| `GET /api/scores/stream` (SSE)           | Consume live score events                                 | Implemented and operator-invoked; not continuously hosted on Vercel |
+| `GET /api/scores/stat-validation`        | Fetch proof material for exact fixture/sequence/stat keys | Used for proof retrieval and read-only Solana verification          |
+
+Only fixtures currently exposed by the TxLINE devnet snapshot are synchronized. Provider credentials and guest JWTs remain server-side and are never logged.
+
+## 11. Exact 90-second judge walkthrough
+
+1. **0–10s:** Open https://predict9ja-web.vercel.app and note the live TxLINE fixture, verified-proof and replay-ready counts.
+2. **10–20s:** Open **Fixtures** and inspect the featured England 1–2 Argentina verified replay.
+3. **20–30s:** Select **Run verified replay** and start the isolated session with exactly 10,000 fictional credits.
+4. **30–45s:** Choose a market outcome, select a stake and confirm the fictional prediction.
+5. **45–55s:** Run the stored TxLINE observations through authoritative sequence `962`.
+6. **55–65s:** Inspect the won/lost result, payout, final balance and reconciled ledger.
+7. **65–78s:** Open the application receipt and follow prediction → observation → finalisation → rules → settlement → receipt.
+8. **78–90s:** Expand verified source evidence to inspect fixture `18241006`, sequence `962`, stat values, digest, Solana program, PDA and validation status, plus the explicit “does not prove” boundary.
+
+## 12. Business and commercial path
+
+- White-label prediction experiences for sports communities and media.
+- Sponsored tournament fan campaigns.
+- Premium community leagues using fictional points.
+- Settlement and evidence APIs for developers.
+- Enterprise audit tooling for sports-data applications.
+
+The current product does not monetize gambling, deposits or real-money wagering.
+
+## 13. Security and integrity boundaries
+
+- Fictional demo credits only; no wallet, custody or real-value transaction.
+- API tokens, JWTs, database URLs, session secrets and diagnostic-wallet material stay outside source control and safe output.
+- Raw rejected provider records and complete provider payloads are not logged.
+- Canonical LIVE observations are immutable inputs to isolated replay fixtures.
+- Sequence `962` is authoritative final evidence; sequence `963` is non-authoritative.
+- TxLINE proof validation verifies source predicates, not the application payout.
+- The catalogue never claims all World Cup fixtures are available.
+
+## 14. Tests and verification
+
+```text
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm check:web-runtime
+```
+
+Integration tests use an isolated database whose name must contain `test`. Runtime smoke checks seed only that isolated database, build the production web application and probe all principal routes.
+
+## 15. Known limitations
+
+- Catalogue breadth is limited to the current TxLINE devnet fixture snapshot.
+- Historical scores follow TxLINE’s documented time window and may return unavailable/empty responses.
+- Provider phases can be `UNKNOWN`; fan presentation uses explicit finalisation and fixture state where available.
+- Live SSE support is implemented but is not a continuously hosted background process on Vercel.
+- Fixed demo quotes are application fixtures, not provider odds or price discovery.
+- Some Solana validation diagnostics require a guarded, disposable funded devnet wallet.
+
+## 16. Deployment link
+
+https://predict9ja-web.vercel.app
+
+## 17. Public repository
+
+https://github.com/Quenine/predict9ja
+
+## 18. Demo video
+
+_Placeholder: submission demo video URL will be added before final entry._
+
+## 19. TxLINE API feedback
+
+### What worked well
+
+- A normalized fixture and score schema suitable for deterministic persistence.
+- Explicit fixture/participant orientation.
+- Historical score access for faithful replay.
+- Stable proof identity by fixture, sequence and ordered stat keys.
+- A Solana validation primitive connecting off-chain observations to verifiable roots.
+
+### Friction encountered
+
+- Historical availability behavior requires careful empty/unavailable-response handling.
+- Provider phases can remain `UNKNOWN` even when other finalisation evidence is available.
+- A final observation may be followed by a later non-final observation, requiring explicit authority rules.
+- Direct serverless PostgreSQL connectivity required an HTTP-compatible runtime transport.
+- Some validation diagnostics require a funded diagnostic wallet.
+- Clearer endpoint availability and provider-state semantics would simplify integrations.
+
+These observations describe integration tradeoffs without exposing credentials or assigning fault to the provider.

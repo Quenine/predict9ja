@@ -151,9 +151,9 @@ export function JudgeDemo({
   }
 
   return (
-    <section className="demo-panel observations">
+    <section className="demo-panel observations" id="interactive-replay">
       <div className={`section-label ${mode === "REPLAY" ? "real" : "synthetic"}`}>
-        {mode === "REPLAY" ? "Real TxLINE replay" : "Instant synthetic demo"}
+        {mode === "REPLAY" ? "Real TxLINE replay" : "Provider-independent instant demo"}
       </div>
       <h2>
         {mode === "REPLAY"
@@ -338,7 +338,7 @@ export function JudgeDemo({
 
           {demo.position && demo.fixture.finalised && (
             <article className="result-card">
-              <div className="section-label receipt">Application settlement receipt</div>
+              <div className="section-label receipt">Replay complete</div>
               <h3>
                 {demo.fixture.homeTeam} {demo.fixture.homeScore}–{demo.fixture.awayScore}{" "}
                 {demo.fixture.awayTeam}
@@ -352,6 +352,8 @@ export function JudgeDemo({
                 <dd>{demo.position.market}</dd>
                 <dt>Selected outcome</dt>
                 <dd>{demo.position.outcome}</dd>
+                <dt>Result</dt>
+                <dd>{(demo.position.actualPayout ?? 0) > 0 ? "Won" : "Lost"}</dd>
                 <dt>Stake</dt>
                 <dd>{demo.position.stake.toLocaleString()} demo credits</dd>
                 <dt>Quote</dt>
@@ -383,12 +385,18 @@ export function JudgeDemo({
                 </p>
               ))}
               {demo.position.receiptId && (
-                <Link
-                  className="button primary inline-button"
-                  href={`/proofs/${demo.position.receiptId}`}
-                >
-                  Inspect receipt
-                </Link>
+                <div className="actions">
+                  <Link className="button primary" href={`/proofs/${demo.position.receiptId}`}>
+                    Inspect receipt
+                  </Link>
+                  <button
+                    className="button"
+                    disabled={pending !== null}
+                    onClick={() => void start()}
+                  >
+                    Reset replay
+                  </button>
+                </div>
               )}
             </article>
           )}

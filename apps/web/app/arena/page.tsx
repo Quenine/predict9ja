@@ -1,5 +1,6 @@
 import { displayedScore } from "@predict9ja/domain";
 import Link from "next/link";
+import type { Metadata } from "next";
 import { loadArenaPage } from "../page-loaders";
 import {
   FEATURED_REPLAY_SOURCE_ID,
@@ -15,6 +16,11 @@ import {
 } from "./catalogue";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Fixtures",
+  description:
+    "Explore the current TxLINE devnet fixture catalogue and verified historical replay.",
+};
 const filters: readonly [CatalogueFilter, string][] = [
   ["all", "All"],
   ["upcoming", "Upcoming"],
