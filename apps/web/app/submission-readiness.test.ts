@@ -25,7 +25,7 @@ describe("submission-ready public product", () => {
   });
   it("provides a portfolio session empty state", () => {
     const source = read("app/portfolio/page.tsx");
-    expect(source).toContain("Start a judge session");
+    expect(source).toContain("You have not made a pick yet");
     expect(source).toContain("/judge?mode=replay");
     expect(source).toContain("/judge?mode=synthetic");
   });
@@ -51,7 +51,7 @@ describe("submission-ready public product", () => {
       read("app/proofs/[receiptId]/page.tsx"),
       read("../../README.md"),
     ].join("\n");
-    expect(publicCopy).toContain("not TxLINE odds");
+    expect(publicCopy).toContain("TxLINE odds are not currently consumed");
     expect(publicCopy).not.toMatch(/real.money (was )?settled/i);
     expect(publicCopy).not.toContain("sequence 963 is final");
   });

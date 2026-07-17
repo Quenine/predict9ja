@@ -15,7 +15,7 @@ import { MarketBoard } from "./market-board";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Match data",
+  title: "Match overview",
   description:
     "Fan-readable TxLINE fixture data, score progression and verifiable source evidence.",
 };
@@ -31,9 +31,9 @@ export default async function FixtureDetails({
   if (result.state !== "loaded")
     return (
       <main className="shell">
-        <h1>Fixture unavailable</h1>
+        <h1>Match unavailable</h1>
         <section className="card">
-          <p>Fixture data could not be loaded safely.</p>
+          <p>Match data could not be loaded safely.</p>
         </section>
       </main>
     );
@@ -51,9 +51,9 @@ export default async function FixtureDetails({
   return (
     <main className="shell fixture-detail">
       <Link className="back-link" href="/arena">
-        ← Back to fixtures
+        ← Back to matches
       </Link>
-      <div className="eyebrow">TxLINE match data</div>
+      <div className="eyebrow">Match overview</div>
       <h1>
         {teams.homeTeam} vs {teams.awayTeam}
       </h1>
@@ -65,23 +65,25 @@ export default async function FixtureDetails({
       </div>
       <section className="match-hero card">
         <div>
+          <h2>Match overview</h2>
           <span className="meta">{fixtureDisplayState(fixture.status, projection)}</span>
           <p className="score">
             {score.homeScore ?? "–"}–{score.awayScore ?? "–"}
           </p>
         </div>
         <div>
+          <h2>{replayAvailable ? "Replay this match" : "Result verification"}</h2>
           <strong>{fixtureMarketState(fixture)}</strong>
           <p>
             {replayAvailable
-              ? "This final match can be replayed using fictional credits in an isolated demo session."
+              ? "This result can be replayed using the real TxLINE updates stored by Predict9ja."
               : fixture.status === "SCHEDULED"
-                ? "This upcoming fixture is data only and does not currently have application markets."
+                ? "Match tracking is available. Predictions are not currently available for this upcoming match."
                 : "Prediction availability is shown honestly from the current application state."}
           </p>
           {replayAvailable && (
             <Link className="button primary inline-button" href="/judge?mode=replay">
-              Run verified replay
+              Replay this match
             </Link>
           )}
         </div>
@@ -121,7 +123,7 @@ export default async function FixtureDetails({
         ) : (
           <p>
             {fixture.status === "SCHEDULED"
-              ? `Kickoff is scheduled for ${formatCatalogueDate(fixture.startsAt)}. Match observations will appear when TxLINE exposes them.`
+              ? "Match updates will appear here when TxLINE data becomes available."
               : "No fan-facing score observations are currently available."}
           </p>
         )}

@@ -31,13 +31,13 @@ export function fixtureLifecycle(fixture: CatalogueFixture) {
 
 export function fixtureProofState(fixture: CatalogueFixture) {
   if (fixture.proofVerifications.some((proof) => proof.validationStatus === "VERIFIED"))
-    return "Proof verified" as const;
+    return "Result verified" as const;
   if (fixture.proofVerifications.some((proof) => proof.fetchStatus === "FETCHED"))
-    return "Proof fetched" as const;
+    return "Verification data fetched" as const;
   const lifecycle = fixtureLifecycle(fixture);
-  if (lifecycle === "upcoming") return "Proof after final data" as const;
-  if (lifecycle === "live") return "Proof pending" as const;
-  return "Proof unavailable" as const;
+  if (lifecycle === "upcoming") return "Verification after full time" as const;
+  if (lifecycle === "live") return "Verification pending" as const;
+  return "Verification unavailable" as const;
 }
 
 export function fixtureReplayReady(fixture: CatalogueFixture) {
@@ -54,21 +54,22 @@ export function fixtureReplayReady(fixture: CatalogueFixture) {
 }
 
 export function fixtureMarketState(fixture: CatalogueFixture) {
-  if (fixture.sourceMode === "SYNTHETIC") return "Fictional demo markets";
-  if (fixtureReplayReady(fixture)) return "Verified replay available";
+  if (fixture.sourceMode === "SYNTHETIC") return "Demo predictions";
+  if (fixtureReplayReady(fixture)) return "Replay & predict";
   if (fixture.markets.length) {
     const states = [...new Set(fixture.markets.map((market) => market.status.toLowerCase()))];
-    return `Application markets: ${states.join(", ")}`;
+    return `Predictions: ${states.join(", ")}`;
   }
   const lifecycle = fixtureLifecycle(fixture);
-  if (lifecycle === "upcoming") return "Fixture data only";
-  if (lifecycle === "live") return "Live market unavailable";
-  return "No application market";
+  if (lifecycle === "upcoming") return "Match tracking available";
+  if (lifecycle === "live") return "Predictions unavailable";
+  return "Predictions unavailable";
 }
 
 export function fixtureLifecycleLabel(fixture: CatalogueFixture) {
   const lifecycle = fixtureLifecycle(fixture);
-  if (lifecycle === "unknown") return "Provider state unknown";
+  if (lifecycle === "unknown") return "Status updating";
+  if (lifecycle === "finished") return "Final";
   return lifecycle.charAt(0).toUpperCase() + lifecycle.slice(1);
 }
 
@@ -128,7 +129,7 @@ export function filterCatalogue<T extends CatalogueFixture>(
     if (filter === "upcoming") return lifecycle === "upcoming";
     if (filter === "live") return lifecycle === "live";
     if (filter === "finished") return lifecycle === "finished";
-    if (filter === "verified") return fixtureProofState(fixture) === "Proof verified";
+    if (filter === "verified") return fixtureProofState(fixture) === "Result verified";
     if (filter === "replay") return fixtureReplayReady(fixture);
     return true;
   });

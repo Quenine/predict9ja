@@ -153,17 +153,13 @@ export function JudgeDemo({
   return (
     <section className="demo-panel observations" id="interactive-replay">
       <div className={`section-label ${mode === "REPLAY" ? "real" : "synthetic"}`}>
-        {mode === "REPLAY" ? "Real TxLINE replay" : "Provider-independent instant demo"}
+        {mode === "REPLAY" ? "Verified match replay" : "Provider-independent instant demo"}
       </div>
-      <h2>
-        {mode === "REPLAY"
-          ? "Run the verified match replay"
-          : "Experience instant deterministic settlement"}
-      </h2>
+      <h2>{mode === "REPLAY" ? "Replay England vs Argentina" : "Try the instant demo"}</h2>
       <p>
         {mode === "REPLAY"
-          ? "Replay the actual stored England vs Argentina observations through authoritative sequence 962, then settle a fictional prediction in an isolated environment."
-          : "Use a provider-independent fictional fixture as an instant deterministic fallback."}
+          ? "Make your pick with demo credits, then replay the real stored TxLINE updates through authoritative sequence 962."
+          : "Use a provider-independent fictional match as an instant fallback."}
       </p>
       <div className="mode-switcher" aria-label="Judge demo mode">
         <button
@@ -171,7 +167,7 @@ export function JudgeDemo({
           disabled={pending !== null}
           onClick={() => setMode("REPLAY")}
         >
-          Real TxLINE replay
+          Replay & Predict
         </button>
         <button
           className={mode === "SYNTHETIC" ? "selected" : ""}
@@ -181,8 +177,8 @@ export function JudgeDemo({
           Instant synthetic demo
         </button>
       </div>
-      <ol className="stepper" aria-label="Judge demo progress">
-        {["Start demo", "Make prediction", "Run simulation", "Inspect result"].map(
+      <ol className="stepper" aria-label="Replay and predict progress">
+        {["Get demo credits", "Make your pick", "Replay the match", "See your result"].map(
           (label, index) => (
             <li className={step >= index + 1 ? "active" : ""} key={label}>
               <span>{index + 1}</span>
@@ -195,7 +191,7 @@ export function JudgeDemo({
       <article className="demo-step">
         <div>
           <span className="step-number">1</span>
-          <h3>Start an isolated demo</h3>
+          <h3>Get demo credits</h3>
           <p>
             Creates a fresh isolated {mode === "REPLAY" ? "historical replay" : "synthetic"} session
             with exactly 10,000 fictional demo credits.
@@ -218,7 +214,7 @@ export function JudgeDemo({
           <article className="demo-step">
             <div>
               <span className="step-number">2</span>
-              <h3>Make a prediction</h3>
+              <h3>Make your pick</h3>
               <p>
                 {demo.fixture.homeTeam} vs {demo.fixture.awayTeam} ·{" "}
                 {demo.mode === "REPLAY"
@@ -296,7 +292,7 @@ export function JudgeDemo({
           <article className="demo-step">
             <div>
               <span className="step-number">3</span>
-              <h3>Run deterministic match simulation</h3>
+              <h3>Replay the match</h3>
               <p>
                 Applies stored observations chronologically through game_finalised, then resolves
                 and settles once without artificial delay.
@@ -311,7 +307,7 @@ export function JudgeDemo({
                 ? "Running…"
                 : demo.fixture.finalised
                   ? "Simulation complete"
-                  : "Run match simulation"}
+                  : "Replay match updates"}
             </button>
           </article>
 
@@ -398,6 +394,28 @@ export function JudgeDemo({
                   </button>
                 </div>
               )}
+              <section
+                className="historical-visualization"
+                aria-label="Historical replay visualization"
+              >
+                <h4>Historical replay visualization</h4>
+                <p className="meta">
+                  A presentation of stored observations—not a live SSE connection.
+                </p>
+                <ol>
+                  <li>Replay started</li>
+                  {demo.timeline.map((event) => (
+                    <li key={event.sequence}>
+                      Stored update #{event.sequence}: {event.participant1Goals ?? "–"}–
+                      {event.participant2Goals ?? "–"}
+                      {event.finalised ? " · final whistle" : ""}
+                    </li>
+                  ))}
+                  <li>Rules evaluated</li>
+                  <li>Demo-credit result settled</li>
+                  <li>Source evidence verified</li>
+                </ol>
+              </section>
             </article>
           )}
         </>

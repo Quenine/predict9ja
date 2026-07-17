@@ -17,7 +17,7 @@ import {
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Fixtures",
+  title: "Matches",
   description:
     "Explore the current TxLINE devnet fixture catalogue and verified historical replay.",
 };
@@ -26,7 +26,7 @@ const filters: readonly [CatalogueFilter, string][] = [
   ["upcoming", "Upcoming"],
   ["live", "Live"],
   ["finished", "Finished"],
-  ["verified", "Proof verified"],
+  ["verified", "Result verified"],
   ["replay", "Replay available"],
 ];
 
@@ -60,45 +60,45 @@ export default async function Arena({
   const page = Math.min(pages, Math.max(1, Number.parseInt(query.page ?? "1", 10) || 1));
   const visible = filtered.slice((page - 1) * pageSize, page * pageSize);
   const counts = [
-    ["TxLINE fixtures", canonical.length],
+    ["TxLINE matches", canonical.length],
     ["Upcoming", canonical.filter((fixture) => fixtureLifecycle(fixture) === "upcoming").length],
     ["Live now", canonical.filter((fixture) => fixtureLifecycle(fixture) === "live").length],
     ["Finished", canonical.filter((fixture) => fixtureLifecycle(fixture) === "finished").length],
     [
-      "Proof verified",
-      canonical.filter((fixture) => fixtureProofState(fixture) === "Proof verified").length,
+      "Result verified",
+      canonical.filter((fixture) => fixtureProofState(fixture) === "Result verified").length,
     ],
     ["Replay ready", canonical.filter(fixtureReplayReady).length],
   ] as const;
   return (
     <main className="shell">
-      <div className="eyebrow">TxLINE fixture explorer</div>
-      <h1>Explore real football fixture data.</h1>
+      <div className="eyebrow">Matches</div>
+      <h1>Follow the matches. Replay the verified result.</h1>
       <p className="lead">
-        Canonical fixtures come from TxLINE devnet. Data availability does not imply an active
-        prediction market.
+        Browse fixtures currently available through TxLINE devnet and explore the verified
+        England–Argentina replay.
       </p>
 
       {featured && (
         <section className="featured-replay" aria-labelledby="featured-replay-title">
           <div>
-            <div className="eyebrow">Featured verified replay</div>
+            <div className="eyebrow">Featured verified match</div>
             <h2 id="featured-replay-title">England 1–2 Argentina</h2>
             <p>
-              Replay actual stored TxLINE observations, make a fictional prediction, run
-              deterministic settlement and inspect the verified source evidence.
+              Replay real stored TxLINE updates, make your pick with demo credits and inspect the
+              verified source evidence.
             </p>
             <div className="fixture-badges">
-              <span className="pill">TxLINE fixture</span>
+              <span className="pill">TxLINE match</span>
               <span className="pill">Final</span>
-              <span className="pill">Proof verified</span>
+              <span className="pill">Result verified</span>
               <span className="pill">Solana devnet</span>
               <span className="pill">Replay available</span>
             </div>
           </div>
           <div className="actions">
             <Link className="button primary" href="/judge?mode=replay">
-              Run verified replay
+              Replay & predict
             </Link>
             <Link className="button" href={`/arena/${FEATURED_REPLAY_SOURCE_ID}`}>
               Inspect match evidence
@@ -128,7 +128,8 @@ export default async function Arena({
           </div>
         </div>
         <p className="meta">
-          Catalogue data is synchronized from the fixtures currently exposed by TxLINE devnet.
+          Predictions are currently available through the verified replay and instant demo
+          experiences. Ordinary matches are available for tracking.
         </p>
       </section>
 
@@ -157,7 +158,7 @@ export default async function Arena({
       </nav>
 
       <section className="fixture-results" aria-labelledby="fixture-results-title">
-        <h2 id="fixture-results-title">TxLINE fixtures</h2>
+        <h2 id="fixture-results-title">TxLINE matches</h2>
         <p>
           {filtered.length} result{filtered.length === 1 ? "" : "s"}
         </p>
@@ -174,7 +175,7 @@ export default async function Arena({
                   <span className="pill">{fixtureLifecycleLabel(fixture)}</span>
                   <span className="pill">{fixtureProofState(fixture)}</span>
                 </div>
-                <p className="meta">TxLINE fixture {fixture.sourceId}</p>
+                <p className="meta">TxLINE match {fixture.sourceId}</p>
                 <h3>
                   <Link href={`/arena/${encodeURIComponent(fixture.sourceId)}`}>
                     {fixture.homeTeam} vs {fixture.awayTeam}
@@ -191,7 +192,7 @@ export default async function Arena({
                   className="button inline-button"
                   href={`/arena/${encodeURIComponent(fixture.sourceId)}`}
                 >
-                  View match data
+                  View match
                 </Link>
               </article>
             );
@@ -228,7 +229,7 @@ export default async function Arena({
             <article className="card" key={fixture.id}>
               <div className="fixture-badges">
                 <span className="pill">Synthetic</span>
-                <span className="pill">Fictional demo markets</span>
+                <span className="pill">Demo predictions</span>
               </div>
               <h3>
                 {fixture.homeTeam} vs {fixture.awayTeam}

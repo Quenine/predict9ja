@@ -3,9 +3,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 const links = [
-  ["/arena", "Fixtures"],
-  ["/judge", "Verified replay"],
-  ["/portfolio", "My predictions"],
+  ["/arena", "Matches"],
+  ["/judge", "Replay & Predict"],
+  ["/portfolio", "My Picks"],
 ] as const;
 export function PublicNav() {
   const pathname = usePathname();

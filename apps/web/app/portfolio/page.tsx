@@ -4,7 +4,7 @@ import { loadPortfolioPage } from "../page-loaders";
 import { positionStatus } from "./presentation";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "My predictions",
+  title: "My Picks",
   description:
     "Review fictional demo-credit predictions, settlement results and application receipts.",
 };
@@ -15,7 +15,7 @@ export default async function Portfolio() {
   if (result.state === "failed")
     return (
       <main className="shell">
-        <h1>My predictions</h1>
+        <h1>My Picks</h1>
         <section className="card">
           <p>Prediction history could not be loaded safely.</p>
         </section>
@@ -25,16 +25,13 @@ export default async function Portfolio() {
     return (
       <main className="shell">
         <div className="eyebrow">Fictional demo portfolio</div>
-        <h1>My predictions</h1>
+        <h1>My Picks</h1>
         <section className="card empty-state">
-          <h2>Start a judge session to see your predictions</h2>
-          <p>
-            Each browser session receives isolated fictional credits. No wallet, deposit or
-            real-value transaction is required.
-          </p>
+          <h2>You have not made a pick yet.</h2>
+          <p>Replay a verified match or try the instant demo.</p>
           <div className="actions">
             <Link className="button primary" href="/judge?mode=replay">
-              Run verified replay
+              Replay a verified match
             </Link>
             <Link className="button" href="/judge?mode=synthetic">
               Run synthetic demo
@@ -50,17 +47,17 @@ export default async function Portfolio() {
   );
   const settled = portfolio.positions.filter((position) => position.settledAt).length;
   const metrics = [
-    ["Fictional credits available", portfolio.availableCredits],
+    ["Demo credits", portfolio.availableCredits],
     ["Total staked", staked],
-    ["Total payouts", payouts],
+    ["Total returned", payouts],
     ["Net demo result", payouts - staked],
-    ["Open positions", portfolio.positions.length - settled],
-    ["Settled positions", settled],
+    ["Open picks", portfolio.positions.length - settled],
+    ["Settled picks", settled],
   ] as const;
   return (
     <main className="shell">
       <div className="eyebrow">Fictional demo portfolio</div>
-      <h1>My predictions</h1>
+      <h1>My Picks</h1>
       <p className="lead">
         A readable record of this browser session’s fictional positions and deterministic
         settlements.
@@ -80,13 +77,15 @@ export default async function Portfolio() {
         <h2>Positions</h2>
         <div className="grid">
           {portfolio.positions.map((position) => {
-            const status = positionStatus(position);
+            const rawStatus = positionStatus(position);
+            const status = rawStatus === "void" ? "refunded" : rawStatus;
+            const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
             const receipt = position.market.receipt;
             const fixture = position.market.fixture;
             return (
               <article className="card position-card" key={position.id}>
                 <div className="fixture-badges">
-                  <span className="pill">{status}</span>
+                  <span className="pill">{statusLabel}</span>
                   <span className="pill">Fictional credits</span>
                 </div>
                 <h3>
@@ -114,7 +113,7 @@ export default async function Portfolio() {
                 </dl>
                 {receipt && (
                   <Link className="button primary inline-button" href={`/proofs/${receipt.id}`}>
-                    View application receipt
+                    View receipt
                   </Link>
                 )}
                 <Link
@@ -127,12 +126,11 @@ export default async function Portfolio() {
                         : `/arena/${fixture.sourceId}`
                   }
                 >
-                  View{" "}
                   {fixture.sourceMode === "REPLAY"
-                    ? "replay"
+                    ? "Replay again"
                     : fixture.sourceMode === "SYNTHETIC"
-                      ? "demo"
-                      : "match"}
+                      ? "Try demo again"
+                      : "View match"}
                 </Link>
               </article>
             );

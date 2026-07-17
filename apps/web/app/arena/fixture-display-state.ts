@@ -15,5 +15,5 @@ export function fixtureDisplayState(
   if (scoreProjection?.latestPhase && scoreProjection.latestPhase !== "UNKNOWN")
     return scoreProjection.latestPhase.replaceAll("_", " ").toLowerCase();
   if (fixtureStatus !== "UNKNOWN") return fixtureStatus.toLowerCase();
-  return "provider state unknown";
+  return "status updating";
 }

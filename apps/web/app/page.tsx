@@ -6,162 +6,113 @@ import {
   formatCatalogueDate,
 } from "./arena/catalogue";
 import { loadHomePage } from "./page-loaders";
-
 export const dynamic = "force-dynamic";
-
 export default async function Home() {
   const result = await loadHomePage();
   const canonical =
     result.state === "loaded"
       ? result.data.fixtures.filter((fixture) => fixture.sourceMode === "LIVE")
       : [];
-  const summary = {
-    fixtures: canonical.length,
-    verified: canonical.filter((fixture) => fixtureProofState(fixture) === "Proof verified").length,
-    replay: canonical.filter(fixtureReplayReady).length,
-    sync:
+  const metrics = [
+    ["TxLINE matches", canonical.length],
+    [
+      "Verified results",
+      canonical.filter((fixture) => fixtureProofState(fixture) === "Result verified").length,
+    ],
+    ["Replay ready", canonical.filter(fixtureReplayReady).length],
+    [
+      "Latest sync",
       result.state === "loaded" && result.data.checkpoint?.updatedAt
         ? formatCatalogueDate(result.data.checkpoint.updatedAt)
         : "Temporarily unavailable",
-  };
+    ],
+  ] as const;
   return (
     <main className="shell home-page">
       <section className="home-hero">
-        <div className="eyebrow">Predict9ja World Cup Arena</div>
-        <h1>From live football data to verifiable prediction settlement.</h1>
+        <div className="eyebrow">Football predictions you can verify</div>
+        <h1>Predict the match. Replay the action. Verify the result.</h1>
         <p className="lead">
-          Predict9ja turns TxLINE match data into auditable fan experiences—combining fixture
-          discovery, deterministic demo-credit markets, historical replay and Solana-verified source
-          evidence.
+          Explore tournament matches, make picks with demo credits, replay real TxLINE match updates
+          and see exactly how every result was settled.
         </p>
         <div className="actions">
           <Link className="button primary" href="/judge?mode=replay">
-            Run the verified replay
+            Replay England vs Argentina
           </Link>
           <Link className="button" href="/arena">
-            Explore TxLINE fixtures
+            Explore matches
           </Link>
         </div>
       </section>
-
+      <section aria-labelledby="benefits-title">
+        <h2 id="benefits-title">Football experiences with the result in view</h2>
+        <div className="grid">
+          <article className="card">
+            <h3>Follow the match</h3>
+            <p>Browse the fixtures currently available through TxLINE devnet.</p>
+          </article>
+          <article className="card">
+            <h3>Make your pick</h3>
+            <p>Choose an outcome using demo credits with no deposit or wallet required.</p>
+          </article>
+          <article className="card">
+            <h3>Verify the result</h3>
+            <p>See the match updates, settlement rules and evidence behind the final result.</p>
+          </article>
+        </div>
+      </section>
       <section aria-labelledby="product-proof-title">
         <h2 id="product-proof-title">Live product proof</h2>
         <div className="catalogue-summary home-summary">
-          <div>
-            <strong>{summary.fixtures}</strong>
-            <span>Synchronized TxLINE fixtures</span>
-          </div>
-          <div>
-            <strong>{summary.verified}</strong>
-            <span>Verified proofs</span>
-          </div>
-          <div>
-            <strong>{summary.replay}</strong>
-            <span>Replay-ready fixtures</span>
-          </div>
-          <div>
-            <strong>{summary.sync}</strong>
-            <span>Latest successful sync · Africa/Lagos</span>
-          </div>
+          {metrics.map(([label, value]) => (
+            <div key={label}>
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </div>
+          ))}
         </div>
         {result.state !== "loaded" && (
           <p className="meta">
-            Live catalogue metrics are temporarily unavailable; the verified replay remains
-            accessible.
+            Live match metrics are temporarily unavailable; the replay remains accessible.
           </p>
         )}
       </section>
-
       <section className="product-pipeline" aria-labelledby="pipeline-title">
-        <h2 id="pipeline-title">An auditable path from source to evidence</h2>
+        <h2 id="pipeline-title">From match update to verified result</h2>
+        <p>
+          TxLINE powers the match data. Predict9ja applies clear settlement rules. Solana-backed
+          proof checks the final source data.
+        </p>
         <ol>
-          <li>TxLINE fixtures</li>
-          <li>Normalized observations</li>
+          <li>TxLINE matches</li>
+          <li>Normalized updates</li>
           <li>Prediction rules</li>
-          <li>Deterministic settlement</li>
-          <li>Solana-verified evidence</li>
+          <li>Rules-based settlement</li>
+          <li>Verified source evidence</li>
         </ol>
       </section>
-
-      <section className="featured-replay home-feature" aria-labelledby="home-replay-title">
+      <section className="featured-replay home-feature">
         <div>
-          <div className="eyebrow">Featured verified replay</div>
-          <h2 id="home-replay-title">England 1–2 Argentina</h2>
+          <div className="eyebrow">Verified match replay</div>
+          <h2>England 1–2 Argentina</h2>
           <p>
-            Replay stored observations from TxLINE fixture {FEATURED_REPLAY_SOURCE_ID}, make a
-            fictional demo-credit prediction and inspect the verified Solana devnet evidence.
+            Replay stored updates from TxLINE match {FEATURED_REPLAY_SOURCE_ID}, make a pick with
+            demo credits and inspect the verified source evidence.
           </p>
-          <div className="fixture-badges">
-            <span className="pill">Final</span>
-            <span className="pill">Proof verified</span>
-            <span className="pill">Replay available</span>
-          </div>
         </div>
         <Link className="button primary" href="/judge?mode=replay">
-          Run verified replay
+          Replay & predict
         </Link>
       </section>
-
-      <section className="trust-statement" aria-label="Product trust statement">
-        <strong>
-          Fictional demo credits only. No deposits, custody or real-value transactions.
-        </strong>
-        <p>
-          TxLINE provides fixture and score data. Predict9ja’s fixed demo quotes are
-          application-generated and are not TxLINE odds.
-        </p>
-      </section>
-      <section aria-labelledby="commercial-path-title">
-        <div className="eyebrow">Commercial path</div>
-        <h2 id="commercial-path-title">Infrastructure for auditable fan engagement</h2>
-        <div className="grid">
-          <article className="card">
-            <h3>Communities and media</h3>
-            <p>
-              White-label prediction experiences, sponsored tournament campaigns and premium
-              community leagues using fictional points.
-            </p>
-          </article>
-          <article className="card">
-            <h3>Developer platform</h3>
-            <p>
-              A settlement and evidence API for teams building transparent sports-data applications.
-            </p>
-          </article>
-          <article className="card">
-            <h3>Enterprise audit</h3>
-            <p>
-              Inspectable data lineage and deterministic outcome tooling for sports
-              applications—without custody or wagering.
-            </p>
-          </article>
+      <section className="partner-teaser">
+        <div>
+          <h2>Building a sports community, fan campaign or data product?</h2>
+          <p>See how Predict9ja can power trustworthy fan experiences.</p>
         </div>
-      </section>
-      <section aria-labelledby="commercial-path-title">
-        <div className="eyebrow">Commercial path</div>
-        <h2 id="commercial-path-title">Infrastructure for auditable fan engagement</h2>
-        <div className="grid">
-          <article className="card">
-            <h3>Communities and media</h3>
-            <p>
-              White-label prediction experiences, sponsored tournament campaigns and premium
-              community leagues using fictional points.
-            </p>
-          </article>
-          <article className="card">
-            <h3>Developer platform</h3>
-            <p>
-              A settlement and evidence API for teams building transparent sports-data applications.
-            </p>
-          </article>
-          <article className="card">
-            <h3>Enterprise audit</h3>
-            <p>
-              Inspectable data lineage and deterministic outcome tooling for sports
-              applications—without custody or wagering.
-            </p>
-          </article>
-        </div>
+        <Link className="button" href="/partners">
+          Explore Predict9ja for partners
+        </Link>
       </section>
     </main>
   );

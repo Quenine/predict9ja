@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Verified replay",
+  title: "Replay & Predict",
   description:
     "Make a fictional prediction, replay real TxLINE observations, settle deterministically and inspect verified source evidence.",
 };
@@ -117,25 +117,24 @@ export default async function Judge({
 
   return (
     <main className="shell">
-      <div className="eyebrow">Predict9ja judge demo</div>
-      <h1>From live sports data to auditable prediction settlement.</h1>
+      <div className="eyebrow">Replay & Predict</div>
+      <h1>Make your pick, then replay a real TxLINE match.</h1>
       <p className="lead">
-        Predict9ja normalizes TxLINE sports data, preserves exact match observations, validates
-        selected score predicates against TxLINE’s Solana devnet program, applies deterministic
-        market rules, and produces auditable application receipts.
+        Start with demo credits, choose an outcome and replay England vs Argentina through its
+        stored TxLINE updates. Predict9ja settles the result using clear, deterministic rules.
       </p>
       <ol className="judge-path" aria-label="Verified replay path">
-        <li>Make a fictional prediction</li>
-        <li>Replay actual TxLINE observations</li>
-        <li>Settle deterministically</li>
-        <li>Inspect verified evidence</li>
+        <li>Get demo credits</li>
+        <li>Make your pick</li>
+        <li>Replay the match</li>
+        <li>See your result</li>
       </ol>
       <Link className="button primary inline-button" href="#interactive-replay">
-        Start the interactive replay
+        Start Replay & Predict
       </Link>
 
       <details className="evidence-card observations" id="verified-evidence">
-        <summary>Technical source evidence</summary>
+        <summary>Technical proof details</summary>
         <div className="section-label real">Real TxLINE + Solana evidence</div>
         <h2>{fixture ? `${fixture.homeTeam} vs ${fixture.awayTeam}` : "England vs Argentina"}</h2>
         <p className="evidence-score">{score}</p>
@@ -186,8 +185,8 @@ export default async function Judge({
         <article>
           <strong>Real replay demonstrates</strong>
           <p>
-            Actual TxLINE fixture, stored observations, historical replay, deterministic application
-            settlement and verified source evidence.
+            Actual TxLINE match, stored updates, verified match replay, rules-based settlement and
+            verified source evidence.
           </p>
         </article>
         <article>

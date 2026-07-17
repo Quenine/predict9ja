@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { loadReceiptPage } from "../../page-loaders";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Application settlement receipt",
+  title: "Prediction receipt",
   description: "Inspect deterministic application settlement and its available source evidence.",
 };
 
@@ -15,7 +15,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   if (result.state !== "loaded")
     return (
       <main className="shell">
-        <h1>Receipt unavailable</h1>
+        <h1>Prediction receipt unavailable</h1>
         <section className="card">
           <p>Receipt data could not be loaded safely.</p>
         </section>
@@ -40,17 +40,21 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
   return (
     <main className="shell receipt-page">
       <div className="eyebrow">Application settlement receipt</div>
-      <h1>
+      <h1>Prediction receipt</h1>
+      <h2>
         {fixture.homeTeam} vs {fixture.awayTeam}
-      </h1>
+      </h2>
       <div className="fixture-badges">
-        <span className="pill">{status}</span>
-        <span className="pill">Fictional demo credits</span>
+        <span className="pill">
+          {status === "void" ? "Refunded" : status.charAt(0).toUpperCase() + status.slice(1)}
+        </span>
+        <span className="pill">Demo credits</span>
       </div>
       <p className="lead">
         Final score {receipt.homeScore ?? "–"}–{receipt.awayScore ?? "–"} · Rule{" "}
         {receipt.ruleVersion}
       </p>
+      <h2>How the result was decided</h2>
       <ol className="provenance-chain" aria-label="Settlement provenance">
         <li>Prediction</li>
         <li>
@@ -62,15 +66,15 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
         <li>Application receipt</li>
       </ol>
       <section className="card observations">
-        <h2>Application settlement</h2>
+        <h2>Prediction settlement</h2>
         <dl>
           <dt>Market</dt>
           <dd>{receipt.market.title}</dd>
           <dt>Selected outcome</dt>
           <dd>{context.position?.outcome.label ?? "Not available"}</dd>
-          <dt>Fictional stake</dt>
+          <dt>Demo-credit stake</dt>
           <dd>{context.position?.stakeCredits.toLocaleString() ?? "0"} credits</dd>
-          <dt>Actual payout</dt>
+          <dt>Demo-credit return</dt>
           <dd>{(context.position?.actualPayoutCredits ?? 0).toLocaleString()} credits</dd>
           <dt>Final score</dt>
           <dd>
@@ -78,16 +82,16 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
           </dd>
           <dt>Settlement status</dt>
           <dd>{receipt.settlementStatus.toLowerCase()}</dd>
-          <dt>Rule version</dt>
+          <dt>Rules used</dt>
           <dd>{receipt.ruleVersion}</dd>
-          <dt>Application integrity digest</dt>
+          <dt>Receipt integrity</dt>
           <dd className="digest">{receipt.integrityDigest}</dd>
         </dl>
       </section>
       {context.receiptContext === "HISTORICAL_REPLAY" && (
         <section className="card observations">
-          <div className="section-label real">Verified source evidence for historical replay</div>
-          <h2>Canonical TxLINE final observation</h2>
+          <div className="section-label real">Match-data source</div>
+          <h2>Technical evidence</h2>
           <dl>
             <dt>Canonical fixture</dt>
             <dd>{context.canonicalSourceId}</dd>
@@ -116,8 +120,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       )}
       {context.receiptContext === "SYNTHETIC_DEMO" && (
         <section className="card observations">
-          <div className="section-label synthetic">Synthetic demo receipt</div>
-          <h2>Provider-independent instant demo</h2>
+          <div className="section-label synthetic">Prediction receipt</div>
+          <h2>How the result was decided</h2>
           <p>
             No TxLINE proof is expected for this fictional fixture. This receipt demonstrates
             deterministic application rules, ledger accounting and idempotent settlement.
@@ -148,7 +152,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ receip
       </section>
       <div className="actions">
         <Link className="button primary" href="/portfolio">
-          My predictions
+          My Picks
         </Link>
         <Link
           className="button"

@@ -1,15 +1,14 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-
 const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
-
-describe("homepage submission presentation", () => {
-  it("features the verified replay CTA", () => {
-    expect(source).toContain("Run the verified replay");
-    expect(source).toContain("/judge?mode=replay");
+describe("fan-first homepage", () => {
+  it("uses the fan headline and one partner teaser", () => {
+    expect(source).toContain("Predict the match. Replay the action. Verify the result.");
+    expect(source.match(/Explore Predict9ja for partners/g)).toHaveLength(1);
+    expect(source).not.toContain("Campaign and event licensing");
   });
-  it("does not claim application quotes are TxLINE odds", () => {
-    expect(source).toContain("are not TxLINE odds");
-    expect(source).not.toContain("TxLINE odds.</p>");
+  it("features match exploration and replay CTAs", () => {
+    expect(source).toContain("Replay England vs Argentina");
+    expect(source).toContain("Explore matches");
   });
 });

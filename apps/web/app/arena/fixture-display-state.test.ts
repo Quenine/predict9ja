@@ -26,7 +26,7 @@ describe("fixtureDisplayState", () => {
 
   it("labels an unknown fixture without a usable projection safely", () => {
     expect(fixtureDisplayState("UNKNOWN", { finalised: false, latestPhase: "UNKNOWN" })).toBe(
-      "provider state unknown",
+      "status updating",
     );
   });
 

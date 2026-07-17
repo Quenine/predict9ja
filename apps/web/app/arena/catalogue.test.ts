@@ -32,7 +32,7 @@ const fixture = (overrides: Partial<CatalogueFixture> = {}): CatalogueFixture =>
 
 describe("fixture catalogue presentation", () => {
   it("uses contextual proof labels", () => {
-    expect(fixtureProofState(fixture())).toBe("Proof verified");
+    expect(fixtureProofState(fixture())).toBe("Result verified");
     expect(
       fixtureProofState(
         fixture({
@@ -46,19 +46,19 @@ describe("fixture catalogue presentation", () => {
           ],
         }),
       ),
-    ).toBe("Proof fetched");
+    ).toBe("Verification data fetched");
     expect(
       fixtureProofState(
         fixture({ status: "SCHEDULED", scoreProjection: null, proofVerifications: [] }),
       ),
-    ).toBe("Proof after final data");
+    ).toBe("Verification after full time");
     expect(
       fixtureProofState(fixture({ status: "LIVE", scoreProjection: null, proofVerifications: [] })),
-    ).toBe("Proof pending");
-    expect(fixtureProofState(fixture({ proofVerifications: [] }))).toBe("Proof unavailable");
+    ).toBe("Verification pending");
+    expect(fixtureProofState(fixture({ proofVerifications: [] }))).toBe("Verification unavailable");
   });
   it("uses honest contextual market labels", () => {
-    expect(fixtureMarketState(fixture())).toBe("Verified replay available");
+    expect(fixtureMarketState(fixture())).toBe("Replay & predict");
     expect(
       fixtureMarketState(
         fixture({
@@ -68,7 +68,7 @@ describe("fixture catalogue presentation", () => {
           scoreObservations: [],
         }),
       ),
-    ).toBe("Application markets: open");
+    ).toBe("Predictions: open");
     expect(
       fixtureMarketState(
         fixture({
@@ -79,7 +79,7 @@ describe("fixture catalogue presentation", () => {
           scoreObservations: [],
         }),
       ),
-    ).toBe("Fixture data only");
+    ).toBe("Match tracking available");
     expect(
       fixtureMarketState(
         fixture({
@@ -90,13 +90,13 @@ describe("fixture catalogue presentation", () => {
           scoreObservations: [],
         }),
       ),
-    ).toBe("Live market unavailable");
+    ).toBe("Predictions unavailable");
     expect(
       fixtureMarketState(
         fixture({ sourceId: "finished", proofVerifications: [], scoreObservations: [] }),
       ),
-    ).toBe("No application market");
-    expect(fixtureMarketState(fixture({ sourceMode: "SYNTHETIC" }))).toBe("Fictional demo markets");
+    ).toBe("Predictions unavailable");
+    expect(fixtureMarketState(fixture({ sourceMode: "SYNTHETIC" }))).toBe("Demo predictions");
   });
   it("excludes the featured replay and retains all other canonical fixtures", () => {
     expect(
