@@ -55,16 +55,21 @@ try {
     "/arena/synthetic-kora-savanna-001",
     "/judge",
     "/portfolio",
+    "/partners",
     "/admin",
   ]) {
     const response = await fetch(`${base}${route}`);
     const body = await response.text();
     if (response.status !== 200) throw new Error(`${route} returned ${response.status}`);
-    if (route === "/arena" && body.includes("Arena unavailable"))
-      throw new Error("Arena rendered unavailable state");
+    if (
+      route === "/arena" &&
+      (body.includes("Matches unavailable") || !body.includes('id="fixture-results-title"'))
+    )
+      throw new Error("Matches page content missing");
     if (
       route === "/judge" &&
-      (!body.includes("From live sports data to auditable prediction settlement") ||
+      (!body.includes('id="interactive-replay"') ||
+        !body.includes('id="verified-evidence"') ||
         !body.includes("Real TxLINE + Solana evidence") ||
         !body.includes("962"))
     )
